@@ -1,0 +1,21 @@
+[2021-09-29 11:11:56] LoginController.java:143 : LOGIN : manager, 0:0:0:0:0:0:0:1
+[2021-09-29 14:05:56] LoginController.java:143 : LOGIN : manager, 0:0:0:0:0:0:0:1
+[2021-09-29 14:07:17] LoginController.java:195 : LOGOUT : manager, 0:0:0:0:0:0:0:1
+[2021-09-29 14:07:19] LoginController.java:143 : LOGIN : manager, 0:0:0:0:0:0:0:1
+[2021-09-29 14:11:57] LoginController.java:143 : LOGIN : manager, 0:0:0:0:0:0:0:1
+[2021-09-29 14:16:29] UserController.java:221 : USER SEARCH : manager, 0:0:0:0:0:0:0:1, 에스알, srpost
+[2021-09-29 14:19:51] LoginController.java:195 : LOGOUT : manager, 0:0:0:0:0:0:0:1
+[2021-09-29 14:19:53] LoginController.java:143 : LOGIN : receiver1, 0:0:0:0:0:0:0:1
+[2021-09-29 14:20:31] LoginController.java:195 : LOGOUT : receiver1, 0:0:0:0:0:0:0:1
+[2021-09-29 14:20:32] LoginController.java:143 : LOGIN : divider1, 0:0:0:0:0:0:0:1
+[2021-09-29 14:20:45] LoginController.java:195 : LOGOUT : divider1, 0:0:0:0:0:0:0:1
+[2021-09-29 14:20:47] LoginController.java:143 : LOGIN : dealer4, 0:0:0:0:0:0:0:1
+[2021-09-29 14:21:24] VocUserController.java:52 : USER VIEW : dealer4, 0:0:0:0:0:0:0:1, 에스알, srpost
+[2021-09-29 14:21:30] LoginController.java:195 : LOGOUT : dealer4, 0:0:0:0:0:0:0:1
+[2021-09-29 14:21:31] LoginController.java:143 : LOGIN : manager, 0:0:0:0:0:0:0:1
+[2021-09-29 14:22:48] UserController.java:221 : USER SEARCH : manager, 0:0:0:0:0:0:0:1, 에스알, srpost
+[2021-09-29 17:17:20] LoginController.java:143 : LOGIN : manager, 127.0.0.1
+[2021-09-29 17:20:45] LoginController.java:143 : LOGIN : manager, 127.0.0.1
+[2021-09-29 17:23:23] LoginController.java:143 : LOGIN : manager, 127.0.0.1
+[2021-09-29 17:24:45] LoginController.java:195 : LOGOUT : manager, 127.0.0.1
+[2021-09-29 17:26:08] LoginController.java:143 : LOGIN : manager, 127.0.0.1

@@ -1,0 +1,11 @@
+[2021-10-13 16:09:15] LoginController.java:143 : LOGIN : manager, 127.0.0.1
+[2021-10-13 16:23:01] LoginController.java:195 : LOGOUT : manager, 127.0.0.1
+[2021-10-13 16:23:04] LoginController.java:143 : LOGIN : manager, 127.0.0.1
+[2021-10-13 17:14:24] LoginController.java:195 : LOGOUT : manager, 127.0.0.1
+[2021-10-13 17:14:25] LoginController.java:143 : LOGIN : manager, 127.0.0.1
+[2021-10-13 17:31:06] UserController.java:221 : USER SEARCH : manager, 127.0.0.1, 홍길동, user1
+[2021-10-13 17:31:07] UserController.java:221 : USER SEARCH : manager, 127.0.0.1, 에스알, srpost
+[2021-10-13 17:41:07] LoginController.java:195 : LOGOUT : manager, 127.0.0.1
+[2021-10-13 17:41:13] LoginController.java:143 : LOGIN : dealer1, 127.0.0.1
+[2021-10-13 17:41:22] LoginController.java:195 : LOGOUT : dealer1, 127.0.0.1
+[2021-10-13 17:41:29] LoginController.java:143 : LOGIN : divider1, 127.0.0.1
