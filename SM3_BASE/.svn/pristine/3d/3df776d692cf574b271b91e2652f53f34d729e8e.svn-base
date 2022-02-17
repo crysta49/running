@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_bbsCmt">
+    
+    <!-- 
+    <resultMap id="listMap" type="bbsCmtBean">
+        <result property="cmtSeq" column="cmtSeq" />
+        <result property="cmtContents" column="cmtContents" />
+        <result property="depth" column="depth" />
+        <result property="fileSeq" column="fileSeq" />
+        <result property="userKey" column="userKey" />
+        <result property="mgrId" column="mgrId" />
+        <result property="writerNm" column="writerNm" />
+        <result property="regDt" column="regDt" />
+        <result property="modiDt" column="modiDt" />
+        <collection property="fileList" column="fileSeq" 
+            ofType="fileBean" select="_file.list" />
+    </resultMap>
+    <select id="list" resultMap="listMap" parameterType="bbsCmtBean"> -->
+    <select id="list" resultType="bbsCmtBean" parameterType="bbsCmtBean">
+        SELECT /*+ INDEX(CO_BBS_COMMENT IDX_BBS_COMMENT) */
+               CMT_SEQ      AS cmtSeq,
+               CMT_CONTENTS AS cmtContents,
+               DEPTH        AS depth,
+               FILE_SEQ     AS fileSeq,
+               USER_KEY     AS userKey,
+               MGR_ID       AS mgrId,
+               WRITER_NM    AS writerNm,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_BBS_COMMENT
+         WHERE BBS_CD = #{bbsCd}
+           AND BBS_SEQ = #{bbsSeq}
+    </select>
+    
+    <select id="view" resultType="bbsCmtBean" parameterType="bbsCmtBean">
+        SELECT BBS_CD       AS bbsCd,
+               BBS_SEQ      AS bbsSeq,
+               CMT_SEQ      AS cmtSeq,
+               REF_SEQ      AS refSeq,
+               ORDER_NO     AS orderNo,
+               DEPTH        AS depth,
+               CMT_CONTENTS AS cmtContents,
+               USER_KEY     AS userKey,
+               MGR_ID       AS mgrId,
+               FILE_SEQ     AS fileSeq,
+               WRITER_NM    AS writerNm,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_BBS_COMMENT A
+         WHERE BBS_CD = #{bbsCd}
+           AND BBS_SEQ = #{bbsSeq}
+           AND CMT_SEQ = #{cmtSeq}
+    </select>
+    
+    <insert id="insert" parameterType="bbsCmtBean">
+        <selectKey keyProperty="cmtSeq" resultType="int" order="BEFORE">
+            SELECT NVL(MAX(CMT_SEQ), 0) + 1
+              FROM CO_BBS_COMMENT
+             WHERE BBS_CD = #{bbsCd}
+               AND BBS_SEQ = #{bbsSeq}
+        </selectKey>
+        INSERT INTO CO_BBS_COMMENT (
+               BBS_CD,         BBS_SEQ,      CMT_SEQ,      ORDER_NO,       REF_SEQ,
+               DEPTH,          USER_KEY,     MGR_ID,       WRITER_NM,      WRITER_ENC_PWD,
+               CMT_CONTENTS,   FILE_SEQ
+        )
+        VALUES (
+               #{bbsCd},       #{bbsSeq},    #{cmtSeq},    #{orderNo},     #{refSeq},
+               #{depth},       #{userKey},   #{mgrId},     #{writerNm},    #{writerEncPwd},
+               #{cmtContents}, #{fileSeq}
+        )
+    </insert>
+        
+    <update id="update" parameterType="bbsCmtBean">
+        UPDATE CO_BBS_COMMENT 
+           SET CMT_CONTENTS = #{cmtContents},
+               <if test="@Ognl@isNotEmpty(fileSeq) and fileSeq != -1">
+                   FILE_SEQ = #{fileSeq},
+               </if>
+               MODI_DT = SYSDATE
+         WHERE BBS_CD = #{bbsCd}
+           AND BBS_SEQ = #{bbsSeq}
+           AND CMT_SEQ = #{cmtSeq}
+    </update>
+       
+    <delete id="delete" parameterType="bbsCmtBean">
+        DELETE FROM CO_BBS_COMMENT
+         WHERE BBS_CD = #{bbsCd}
+           AND BBS_SEQ = #{bbsSeq}
+           AND CMT_SEQ = #{cmtSeq}
+    </delete>
+    
+    <update id="updateForDelete" parameterType="bbsCmtBean">
+        UPDATE CO_BBS_COMMENT 
+           SET CMT_CONTENTS = '_DELETE_',
+               FILE_SEQ = -1
+         WHERE BBS_CD = #{bbsCd}
+           AND BBS_SEQ = #{bbsSeq}
+           AND CMT_SEQ = #{cmtSeq}
+    </update>
+    
+    <select id="childCount" resultType="int" parameterType="bbsCmtBean">
+        SELECT COUNT(CMT_SEQ)
+          FROM CO_BBS_COMMENT
+         WHERE BBS_CD = #{bbsCd}
+           AND BBS_SEQ = #{bbsSeq}
+           AND REF_SEQ = #{refSeq}
+           AND ORDER_NO = #{orderNo}
+           AND DEPTH = #{depth}
+    </select>
+    
+    <!-- Hierarchical COMMENT -->
+     
+    <select id="viewMinRefSeq" resultType="int" parameterType="bbsCmtBean">
+        SELECT NVL(MIN(REF_SEQ), 0)-1
+          FROM CO_BBS_COMMENT
+         WHERE BBS_CD = #{bbsCd}
+           AND BBS_SEQ  = #{bbsSeq}
+    </select>
+
+    <select id="viewParent" resultType="bbsCmtBean" parameterType="bbsCmtBean">
+        SELECT REF_SEQ   AS refSeq, 
+               DEPTH     AS depth, 
+               ORDER_NO  AS orderNo
+          FROM CO_BBS_COMMENT
+         WHERE BBS_CD = #{bbsCd}
+           AND BBS_SEQ = #{bbsSeq}
+           AND CMT_SEQ = #{cmtSeq}
+    </select>
+    
+    <select id="relativeList" resultType="bbsCmtBean" parameterType="bbsCmtBean">
+        SELECT REF_SEQ   AS refSeq, 
+               DEPTH     AS depth, 
+               ORDER_NO  AS orderNo
+          FROM CO_BBS_COMMENT
+         WHERE BBS_CD = #{bbsCd}
+           AND BBS_SEQ  = #{bbsSeq}
+           AND REF_SEQ  = #{refSeq}
+           AND ORDER_NO &gt;= #{orderNo}
+         ORDER BY ORDER_NO ASC
+    </select>
+    
+    <update id="updateRelativeList">
+        UPDATE CO_BBS_COMMENT
+           SET ORDER_NO = ORDER_NO + 1
+         WHERE BBS_CD = #{bbsCd}
+           AND BBS_SEQ  = #{bbsSeq}
+           AND REF_SEQ  = #{refSeq}
+           AND ORDER_NO &gt;= #{orderNo}
+    </update>
+    
+</mapper>

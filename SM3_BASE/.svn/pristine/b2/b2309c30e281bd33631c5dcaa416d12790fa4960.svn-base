@@ -1,0 +1,102 @@
+/*
+ * VOC 개별 모듈(페이지)용 CSS
+ *
+ * @author  finkles
+ * @date    2014-12-02
+ * @since   3.0
+ */
+@charset "utf-8";
+
+/*----------------------------------------
+    VOC Progress box
+----------------------------------------*/
+.voc-progress-box { padding: 12px 6px; }
+.voc-progress-box > table td { padding: 0; border: 0; }
+.voc-progress-box > table td.divider { width: 26px !important; background: url('../images/progress/arrowbg_s.gif') center no-repeat; }
+.voc-progress-box > table td.yellow { font-size: 13px; font-weight: bold; background: url('../images/progress/arrowbg_yellow.gif') center center no-repeat; }
+.voc-progress-box > table td.gray { font-size: 11px; color: #9d9d9d; background: url('../images/progress/arrowbg_gray.gif') center center no-repeat; }
+.voc-progress-box > table td.blue { font-size: 11px; color: #9d9d9d; background: url('../images/progress/arrowbg_blue.gif') center center no-repeat; }
+.voc-progress-box > table { width: 100%; table-layout: fixed; border-collapse: collapse; text-align: center; }
+.voc-progress-box > table td.gray,
+.voc-progress-box > table td.blue,
+.voc-progress-box > table td.yellow { width: 14%; -webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; background-size: cover; }
+
+.srm-progress-box { padding: 10px 0px; padding-bottom: 25px; border-bottom: 1px solid #D8D8D8; }
+.srm-progress-box table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.srm-progress-box table th, .srm-progress-box table td { text-align: center; width: 14%; }
+.srm-progress-box table th.divider { width: auto; }
+.srm-progress-box table td { vertical-align: top; }
+.srm-progress-box table td .status { color: #444; font-weight: bold; }
+.srm-progress-box table td .date { color: #666; font-size: 11px; }
+.srm-progress-box table td .human { color: #666; font-size: 11px; }
+.srm-progress-box table td .master { color: #067700; }
+.srm-progress-box div[class^=step0] { width: 100%; height: 65px; background-position: center; background-repeat: no-repeat; margin-bottom: 8px; }
+.srm-progress-box .step01 { background-image: url("../images/progress/step01.png"); }
+.srm-progress-box .step02 { background-image: url("../images/progress/step02.png"); }
+.srm-progress-box .step03 { background-image: url("../images/progress/step03.png"); }
+.srm-progress-box .step04 { background-image: url("../images/progress/step04.png"); }
+.srm-progress-box .step05 { background-image: url("../images/progress/step05.png"); }
+.srm-progress-box .step06 { background-image: url("../images/progress/step06.png"); }
+.srm-progress-box .active01 { background-image: url("../images/progress/step01_on.png"); }
+.srm-progress-box .active02 { background-image: url("../images/progress/step02_on.png"); }
+.srm-progress-box .active03 { background-image: url("../images/progress/step03_on.png"); }
+.srm-progress-box .active04 { background-image: url("../images/progress/step04_on.png"); }
+.srm-progress-box .active05 { background-image: url("../images/progress/step05_on.png"); }
+.srm-progress-box .active06 { background-image: url("../images/progress/step06_on.png"); }
+
+
+/*----------------------------------------
+    VOC Sancer box
+----------------------------------------*/
+.voc-sancer-box { position: relative; padding: 8px; border: 1px solid #E3E3E3; 
+    text-align: center; white-space:nowrap; overflow: auto; }
+.voc-sancer-box .voc-sancer-item { display:inline-block; padding: 8px; border: 2px solid transparent; margin-right: 20px; text-align: center; vertical-align: top; }
+.voc-sancer-box .current { border: 2px solid #FF5629; }
+.voc-sancer-box .voc-sancer-item img { }
+.voc-sancer-box .voc-sancer-item span { margin-top: 4px; display: block; }
+.voc-sancer-box .voc-sancer-item span.sancerNm { color: #000; }
+.voc-sancer-box .voc-sancer-item span.sancerNm i { font-style: normal; }
+.voc-sancer-box .voc-sancer-item span.sancerNm i.READY { color: #777; }
+.voc-sancer-box .voc-sancer-item span.sancerNm i.APPROVE { color: #5A9AD0; }
+.voc-sancer-box .voc-sancer-item span.sancerNm i.DENY { color: #C80000; }
+.voc-sancer-box .voc-sancer-item span.sancDt { color: #777; }
+
+/* 반송요청, 기한연장요청, 결재반송 라벨 */
+.label-snbkreq, .label-extreq, .label-sancdeny { 
+    display: inline-block; padding: 1px 2px; font-size: 11px; margin-right: 3px; }
+
+/*----------------------------------------
+    VOC Term stat
+----------------------------------------*/
+.maxBar { background-color: #FF77B1; }
+.normalBar { background-color: #D3E991; }
+
+/*----------------------------------------
+    VOC alim icon
+----------------------------------------*/
+span.t3-alert-E { background-image: url("../base/images/menu-icon/mnu-note.png") }
+span.t3-alert-M { background-image: url("../spi/famfamfam/icons/phone_sound.png"); }
+
+/*----------------------------------------
+    VOC Text DIFF
+----------------------------------------*/
+.diff-EQUAL {  }
+.diff-INSERT { background: #D1E1AD; color: #405A04; }
+.diff-DELETE { text-decoration: line-through; color: #A82400; background-color: #E5BDB2; } 
+.diff-OTHER {  }
+
+/*----------------------------------------
+    VOC Score
+----------------------------------------*/
+.score-box dl { color: #666; line-height: 24px; margin: 0; }
+.score-box dt { font-weight: bold; }
+.score-box dd { margin: 4px 0 10px 10px; }
+
+/*----------------------------------------
+    VOC Etc
+----------------------------------------*/
+span.exceed { border-radius: 3px; background-color: #c80000; padding: 2px; color: #fff; 
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25); white-space: nowrap; vertical-align: baseline; }
+
+select.width120 {width: 120px;}
+

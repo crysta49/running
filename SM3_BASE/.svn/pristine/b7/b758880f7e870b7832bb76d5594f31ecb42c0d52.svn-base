@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+<sitemesh xmlns="http://sitemesh.org/xml/config"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://sitemesh.org/xml/config http://sitemesh.org/xml/config"> -->
+    
+<sitemesh>
+
+    <!-- Decoration def for BACK_OFFICE -->
+    
+    <mapping path="/bo/**/*" 
+        decorator="/WEB-INF/jsp/bo/common/decorator/default.jsp"/>
+    
+    <mapping path="/bo/**/PR_*" 
+        decorator="/WEB-INF/jsp/bo/common/decorator/defaultPopup.jsp"/>
+    
+    <mapping path="/bo/**/AR_*.do" exclued="true" />
+    <mapping path="/bo/**/TR_*.do" exclued="true" />
+    <mapping path="/bo/**/JR_*.do" exclued="true" />
+    <mapping path="/bo/**/XR_*.do" exclued="true" />
+    <mapping path="/bo/**/ER_*.do" exclued="true" />
+    
+    <mapping path="/bo/base/login/NR_loginForm.do" exclued="true" />
+    <mapping path="/bo/base/login/NR_multiLoginInfo.do" exclued="true" />
+    
+    <mime-type>text/html</mime-type>
+    
+    <!--
+    Weblogic 사용 시 데코레이션이 안될 경우 path 경로 앞에 /WEB*INF/jsp 경로를 붙일 것
+    -->
+</sitemesh>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_explorer">
+    
+    <!-- 
+    * 동일 네임스페이스 구간에서  useCache="true", flushCache="false"가 디폴트 값임
+    * 따라서 캐싱 제외 쿼리에 한해서만 useCache="false"를 해주면 됨.
+    -->
+    <!--
+    * 매 30분 캐시 사용 안함
+    * 대시보드의 반영이 느림
+    -->
+    <!--
+    <cache eviction="FIFO" flushInterval="1800000" readOnly="true" size="20"/>
+     -->
+    
+    <select id="planList" resultType="map" parameterType="map">
+        <![CDATA[
+        SELECT ROWNUM AS RNUM, X.*
+          FROM (
+            SELECT SEQ          AS SEQ,
+                   START_DD     AS START_DD,
+                   SUBSTR(START_DD,7,8) AS DD,
+                   TITLE        AS TITLE
+              FROM CO_PLAN
+             WHERE START_DD >= TO_CHAR(TO_DATE(#{planDay},'YYYYMMDD'),'YYYYMMDD')
+               AND SUBSTR(START_DD,1,6) = SUBSTR(TO_CHAR(TO_DATE(#{planDay},'YYYYMMDD'),'YYYYMMDD'),1,6)
+             ORDER BY START_DD ASC
+            ) X
+         WHERE ROWNUM BETWEEN #{pagingStartNum} AND #{pagingEndNum}
+        ]]>
+    </select>
+    
+    <select id="calendar" resultType="map" parameterType="string">
+        SELECT TO_CHAR(TO_DATE(#{planDay},'YYYYMMDD')-1,'YYYYMMDD') AS PREV_DAY,
+               TO_CHAR(TO_DATE(#{planDay},'YYYYMMDD'),'YYYYMMDD') AS PLAN_DAY,
+               TO_CHAR(TO_DATE(#{planDay},'YYYYMMDD')+1,'YYYYMMDD') AS NEXT_DAY
+          FROM DUAL
+    </select>
+    
+    <select id="bbsList" resultType="bbsBean" parameterType="map">
+        SELECT ROWNUM NUM, X.* FROM (
+            SELECT /*+ INDEX(CO_BBS IDX_BBS_MAIN) */ 
+                   BBS_CD      AS bbsCd,
+                   BBS_SEQ     AS bbsSeq,
+                   TITLE       AS title,
+                   FILE_SEQ    AS fileSeq,
+                   FN_FILE_CNT(FILE_SEQ) AS fileCnt,
+                   <if test="withStatus == true">
+                   STATUS_CD   AS statusCd,
+                   FN_PRV_NM(STATUS_CD, 'BBS_STATUS') AS statusNm, 
+                   </if>
+                   TO_CHAR(REG_DT, 'YYYY-MM-DD') AS regDt
+              FROM CO_BBS
+             WHERE BBS_CD = #{bbsCd}
+            ) X
+        WHERE ROWNUM &lt;= #{rowPerPage}
+    </select>
+    
+    <select id="faqList" resultType="faqBean" parameterType="map">
+        SELECT ROWNUM NUM, X.* FROM (
+            SELECT /*+ INDEX_DESC(CO_FAQ) */
+                   SEQ       AS seq,
+                   TITLE     AS title,
+                   READ_CNT  AS readCnt,
+                   TO_CHAR(REG_DT, 'YYYY-MM-DD') AS regDt
+              FROM CO_FAQ
+            ) X
+        WHERE ROWNUM &lt;= #{rowPerPage}
+    </select>
+    
+    <select id="recentBbsCount" resultType="map" parameterType="int">
+        SELECT CONCAT('bbsCd_', A.BBS_CD) AS KEYZ, 
+               A.BBS_CD                   AS BBSCD,
+               A.BBS_NM                   AS BBSNM,
+               COUNT(B.BBS_SEQ)           AS CNT
+          FROM CO_BBS_CONF A LEFT OUTER JOIN CO_BBS B
+            ON A.BBS_CD = B.BBS_CD
+           AND B.REG_DT &gt; SYSDATE - (#{day} * INTERVAL '1' DAY)
+          WHERE A.USE_YN ='Y'
+         GROUP BY A.BBS_CD, A.BBS_NM
+    </select>
+
+    <select id="qnaStatusCount" resultType="map" parameterType="int">
+        SELECT A.PRV_CD AS KEYZ,
+               COUNT(B.BBS_SEQ) AS CNT
+          FROM CO_CODE_PRV A LEFT OUTER JOIN CO_BBS B
+            ON A.PRV_CD = B.STATUS_CD
+           AND B.BBS_CD = #{bbsCd}
+         WHERE A.GRP_CD = 'BBS_STATUS'
+           AND A.USE_YN ='Y'
+         GROUP BY A.PRV_CD
+    </select>
+</mapper>

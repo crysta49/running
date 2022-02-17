@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+       xmlns:p="http://www.springframework.org/schema/p" 
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+                           
+    <!-- COMMON -->
+    <bean name="commonSeqGenerator" abstract="true"
+        class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrServiceImpl" destroy-method="destroy"
+        p:dataSource-ref="dataSource"
+        p:blockSize="1" />
+    
+    <!-- CO_FILE -->
+    <bean
+        name="fileSeqGenerator" parent="commonSeqGenerator"
+        class="com.srpost.salmon.spi.egov.SalmonSeqGenerator" 
+        p:tableName="CO_FILE" />
+        
+    <!-- CO_BBS -->
+    <bean 
+        name="bbsSeqGenerator" parent="commonSeqGenerator"
+        class="com.srpost.salmon.spi.egov.SalmonSeqGenerator"
+        p:tableName="CO_BBS" />
+        
+    <!-- CO_BBS_CONF -->
+    <bean 
+        name="bbsConfSeqGenerator" parent="commonSeqGenerator"
+        class="com.srpost.salmon.spi.egov.SalmonSeqGenerator"
+        p:tableName="CO_BBS_CONF" />
+
+    <!-- CO_FAQ -->
+    <bean 
+        name="faqSeqGenerator" parent="commonSeqGenerator"
+        class="com.srpost.salmon.spi.egov.SalmonSeqGenerator"
+        p:tableName="CO_FAQ" />
+    
+    <!-- CO_FAQ_CTG -->
+    <bean 
+        name="faqCtgSeqGenerator" parent="commonSeqGenerator"
+        class="com.srpost.salmon.spi.egov.SalmonSeqGenerator"
+        p:tableName="CO_FAQ_CTG" />
+    
+    <!-- CO_MENU -->
+    <bean 
+        name="menuSeqGenerator" parent="commonSeqGenerator"
+        class="com.srpost.salmon.spi.egov.SalmonSeqGenerator"
+        p:tableName="CO_MENU" />
+    
+    <!-- CO_MENU_FRONT -->
+    <bean 
+        name="menuFrontSeqGenerator" parent="commonSeqGenerator"
+        class="com.srpost.salmon.spi.egov.SalmonSeqGenerator"
+        p:tableName="CO_MENU_FRONT" />
+
+    <!-- CO_DEPT -->
+    <bean 
+        name="deptSeqGenerator" parent="commonSeqGenerator"
+        class="com.srpost.salmon.spi.egov.SalmonSeqGenerator"
+        p:tableName="CO_DEPT">
+        <property name="strategy">
+            <bean class="egovframework.rte.fdl.idgnr.impl.strategy.EgovIdGnrStrategyImpl"
+                p:prefix="DEPT" p:cipers="5" p:fillChar="0" />
+        </property>
+    </bean>
+        
+    <!-- CO_AUTH -->
+    <bean 
+        name="authSeqGenerator" parent="commonSeqGenerator"
+        class="com.srpost.salmon.spi.egov.SalmonSeqGenerator"
+        p:tableName="CO_AUTH" />
+    
+    <!-- CO_ERR_LOG -->
+    <bean 
+        name="errLogSeqGenerator" parent="commonSeqGenerator"
+        class="com.srpost.salmon.spi.egov.SalmonSeqGenerator"
+        p:tableName="CO_ERR_LOG" />
+    
+    <!-- CO_HDAY -->
+    <bean 
+        name="hdaySeqGenerator" parent="commonSeqGenerator"
+        class="com.srpost.salmon.spi.egov.SalmonSeqGenerator"
+        p:tableName="CO_HDAY" />
+    
+    <!-- CO_LOGIN_LOG -->
+    <bean 
+        name="loginLogSeqGenerator" parent="commonSeqGenerator"
+        class="com.srpost.salmon.spi.egov.SalmonSeqGenerator"
+        p:tableName="CO_LOGIN_LOG" />
+    
+    <!-- SI_IP_FILTER : IpFilterInterceptor 사용할때만 사용 -->
+    <bean 
+        name="ipFilterSeqGenerator" parent="commonSeqGenerator"
+        class="com.srpost.salmon.spi.egov.SalmonSeqGenerator"
+        p:tableName="SI_IP_FILTER" />
+        
+</beans>

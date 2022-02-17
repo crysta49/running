@@ -1,0 +1,19 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible"/>
+<meta charset="utf-8"/>
+<title>voc</title>
+	<style type="text/css">
+
+	</style>
+</head>
+<frameset frameborder=0 cols="20%,80%">
+  <frame id="frame_pages" name="frame_pages" src="pages/pageList.htm" scrolling="auto">
+  <frame name="frame_view" src="pages/main.htm" >
+
+<body>
+<noframes>이 브라우저는 frame을 지원하지 않습니다.</noframes>
+</body>
+</frameset>
+</html>

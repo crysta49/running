@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible"/>
+    <title></title>
+</head>
+
+<body style="background-color: #fff;">
+<div style="width:100%;">
+    <div style="width:686px; margin:0 auto;">
+        <div>
+            <img src="${hostUrl}/resources/common/logo.png" alt="${systemNm}" style="margin-bottom:10px"/>
+        </div>
+        <div style="height:auto;">
+            <ul style="list-style:none;margin:0;padding:0;">
+                <li style="height:31px; background: url(${hostUrl}/resources/base/images/mail/rbox_top.gif) no-repeat;"></li>
+                <li style="border-left:5px solid #eaeaea; border-right:5px solid #eaeaea;">
+
+                    <!-- starat contents -->
+                    <div style="width:600px; margin:0 auto;font-size:12px; font-family:dotum; line-height:16px; line-height:16px;">
+                        <dl style="margin:0; border-bottom:1px solid #eaeaea;">
+                            <dd style="margin:0;padding:0">안녕하세요?</dd>
+                            <dd style="margin:0;padding-top:7px;"><strong>${clientNm}</strong> 입니다.</dd>
+                            <dd style="margin:0;padding:7px 0;"><strong style="color:#0057b3;">${dataBean.regDt}</strong> 에 신청된 상담 건에 대한 알림메일 입니다.</dd>
+                        </dl>
+                        <p/>
+                        <strong style="color:#0057b3;">${dataBean.vocNm}</strong> :
+                        <strong style="color:#0057b3;">${userEmailTitle}</strong>
+                        <p/>
+                        #if (${actionCd} == "RECEIVE")
+                        <table style="font-size: 12px; background-color: #fff; width:600px;border-collapse: collapse; border-spacing:0;" border="1" bordercolor="#ccc">
+                            <caption style="text-align:left;font-weight:bold;">접수정보</caption>
+                            <colgroup>
+                                <col style="width:100px"/>
+                                <col style="width:200px;"/>
+                                <col style="width:100px"/>
+                                <col style="width:200px;"/>
+                            </colgroup>
+                            <tr>
+                                <th style="text-align:center;background-color:#F5F5F5;">접수번호</th>
+                                <td style="padding:5px 5px;" colspan="3">${dataBean.rcvNo}</td>
+                            </tr>
+                            <tr>
+                                <th style="text-align:center;background-color:#F5F5F5;">접수자</th>
+                                <td style="padding:5px 5px;">${dataBean.rcvNm}</td>
+                                <th style="text-align:center;background-color:#F5F5F5;">접수일</th>
+                                <td style="padding:5px 5px;">${dataBean.rcvDt}</td>
+                            </tr>
+                        </table>
+                        <p/>
+                        #else
+                            #if (${actionCd} != "OFF_INSERT" && ${actionCd} != "RECEIVE" 
+                                        && ${actionCd} != "TRANSFER" && ${actionCd} != "TRASH")
+                                #foreach ($divBean in $dataBean.divList)
+                                    #if ( $divBean.masterYn == "Y")
+                                    <table style="font-size: 12px; background-color: #fff; width:600px;border-collapse: collapse; border-spacing:0;" border="1" bordercolor="#ccc">
+                                        <caption style="text-align:left;font-weight:bold;">처리정보</caption>
+                                        <colgroup>
+                                            <col style="width:100px"/>
+                                            <col style="width:500px;"/>
+                                        </colgroup>
+                                        <tr>
+                                            <th style="text-align:center;background-color:#F5F5F5;">처리부서</th>
+                                            <td style="padding:5px 5px;">$divBean.deptNm</td>
+                                        </tr>
+                                        #if (${actionCd} == "DIRECT_ASSIGN" || ${actionCd} == "OFF_ASSIGN_INSERT")
+                                        <tr>
+                                            <th style="text-align:center;background-color:#F5F5F5;">처리자</th>
+                                            <td style="padding:5px 5px;" colspan="3">$divBean.mgrNm</td>
+                                        </tr>
+                                        #end
+                                        #if ("$!{dataBean.lmtDt}" != "")
+                                        <tr>
+                                            <th style="text-align:center;background-color:#F5F5F5;">처리기한일</th>
+                                            <td style="padding:5px 5px;">$dataBean.lmtDt</td>
+                                        </tr>
+                                        #end
+                                        #if (${dataBean.userStatusCd} == 4)
+                                        <tr>
+                                            <th style="text-align:center;background-color:#F5F5F5;">처리자</th>
+                                            <td style="padding:5px 5px;">$divBean.mgrNm</td>
+                                        </tr>
+                                        <tr>
+                                            <th style="text-align:center;background-color:#F5F5F5;">답변</th>
+                                            <td style="padding:5px 5px;word-break:break-all;white-space:pre-line;">${dataBean.reply}</td>
+                                        </tr>
+                                        <tr>
+                                            <th style="text-align:center;background-color:#F5F5F5;">답변일</th>
+                                            <td style="padding:5px 5px;">${dataBean.endDt}</td>
+                                        </tr>
+                                        #end
+                                    </table>
+                                    #end
+                                #end
+                            #end
+                        <p/>
+                        #end
+                        <table style="font-size: 12px; background-color: #fff; width:600px;border-collapse: collapse; border-spacing:0;" border="1" bordercolor="#ccc">
+                            <caption style="text-align:left;font-weight:bold;">신청정보</caption>
+                            <colgroup>
+                                <col style="width:100px"/>
+                                <col style="width:500px;"/>
+                            </colgroup>
+                            <tr>
+                                <th style="text-align:center;background-color:#F5F5F5;">신청인</th>
+                                <td style="padding:5px 5px;">${dataBean.userNm}</td>
+                            </tr>
+                            <tr>
+                                <th style="text-align:center;background-color:#F5F5F5;">제목</th>
+                                <td style="padding:5px 5px;">${dataBean.title}</td>
+                            </tr>
+                            <tr>
+                                <th style="text-align:center;background-color:#F5F5F5;">내용</th>
+                                <td style="padding:5px 5px;word-break:break-all;white-space:pre-line;">${dataBean.question}</td>
+                            </tr>
+                        </table>
+                        <p/>
+                        
+                        #if ("$!{dataBean.mgrStatusCd}" == "6" && ${actionCd} != "USER_SCORE")
+                        	<dl style="margin:0;padding-top:40px;">
+                        		
+                        		<dd style="text-align:center; font-weight: bold; font-size: 14px;">
+                        			처리내용에 만족하셨나요? 더 나은 서비스를 위한 만족도 조사에 참여해 주세요.
+                        		</dd>
+                            	<dd style="text-align:center; margin-top: 10px;">
+	                            	<a href="${hostUrl}/bo/fm/voc/core/score/outside/PR_form.do?vocKey=${vocKey}" target="_blank">
+	                            		<img src="${hostUrl}/resources/base/images/mail/btn_score_view.png" style="border:0;" alt="평가하기"/>
+	                            	</a>
+                            	</dd>
+                        	</dl>                        	
+                        #end
+                        
+                        #if (${actionCd} == "USER_SCORE")
+                        	<!-- 
+	                       		만족도 평가 점수 넣어줄까 생각중
+	                        -->
+                        #end
+                        
+                        <p/>                        
+                        <dl style="margin:0; border-top:1px solid #eaeaea;">
+                            <dd style="margin:0;padding-top:20px;color:#888;">
+                            본 메일은 발신 전용 메일로 회신 되지 않습니다. 문의사항은 고객센터를 이용해 주세요.
+                            </dd>
+                            <dd style="margin:0;">
+                                ${address}
+                            </dd>
+                        </dl>
+                    </div>
+                    <!-- end contents -->
+                    
+                <li style="margin:0;height:29px; background: url(${hostUrl}/resources/base/images/mail/rbox_btm.gif) no-repeat;"></li>
+            </ul>
+        </div>
+
+    </div>
+<p/>
+    
+</div>
+</body>
+</html>
+    

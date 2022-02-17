@@ -1,0 +1,57 @@
+------------------------------------
+    * SVN에서 프로젝트 체크아웃
+------------------------------------
+1. http://svn.srpost.co.kr/svn/flamingo3 저장소 생성
+2. trunk 폴더에서 우클릭 후 'Check out as Maven project..' 클릭
+
+------------------------------------
+    * 프로젝트 Maven 빌드
+------------------------------------
+1. 프로젝트 우클릭
+2. Run AS 클릭
+3. Maven build .. 클릭
+4. 빌드 설정 창에서 Goals에 dependency:copy-dependencies 입력
+5. Run
+
+------------------------------------
+    * 커밋하면 안되는 폴더
+------------------------------------
+1. [ROOT]/webapp/upload
+2. [ROOT]/webapp/WEB-INF/lib
+3. [ROOT]/webapp/WEB-INF/log
+
+※ 해당 폴더 우클릭 후 Team > Add to svn:ignore 선택하면 버전관리 대상에서 제외됨
+
+------------------------------------
+    * 기타 권고 사항
+------------------------------------
+1. main/resource 폴더는 프레임워크 설정파일이 위치한 곳으로 임의 변경하면 안됨
+    (단 prop/database.prop 파일은 개발 환경에 맞게 변경 가능함)
+    
+2. main/src/com/srpost/cm/bo 패키지는 베이스모듈이 위치한 곳으로 임의 변경하면 안됨 
+
+3. main/src/com/srpost/salmon 패키지는 프레임워크 코어가 위치한 곳으로 임의 변경하면 안됨 
+
+※ 변경이 필요할 경우 finkle에게 문의 요망
+
+------------------------------------
+    * 참고
+------------------------------------
+1. IE8 이상만 지원함
+2. JDK 1.6 이상만 지원함
+    => 전자정부 프레임워크 3.0은 JDK 1.6 이상만 지원함
+    => http://www.egovframe.go.kr/wiki/doku.php?id=egovframework:dev3.0:gettingstarted
+
+3. 이클립스는 Luna 이상
+4. Tomcat은 6 이상
+5. 오라클은 9i 이상
+
+------------------------------------
+    * 기타
+------------------------------------
+1. ${param.xxxx} 대신 ${smp.xxxx}를 사용할 것
+2. jsp 소스내 <% /* 로직 */ %> 또는 <%= /* 변수 */ %> 사용 금지
+
+※ java.io.FileNotFoundException: http://www.opensymphony.com/osworkflow/workflow_2_8.dtd 에러날 경우
+====> dist/jars/osworkflow-2.8.0.jar 파일로 대체할 것.
+

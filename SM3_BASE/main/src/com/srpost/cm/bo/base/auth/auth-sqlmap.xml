@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_auth">
+
+    <!-- CO_AUTH -->
+    
+    <select id="list" resultType="authBean">
+        SELECT AUTH_CD   AS authCd,
+               AUTH_NM   AS authNm,
+               MANAGE_YN AS manageYn
+          FROM CO_AUTH
+         WHERE SHOW_YN = 'Y'
+         ORDER BY AUTH_CD ASC
+    </select>
+    
+    <select id="view" resultType="authBean" parameterType="authBean">
+        SELECT AUTH_CD   AS authCd,
+               AUTH_NM   AS authNm,
+               AUTH_DESC AS authDesc,
+               MANAGE_YN AS manageYn
+          FROM CO_AUTH
+         WHERE AUTH_CD = #{authCd}
+    </select>
+    
+    <insert id="insert" parameterType="authBean">
+        INSERT INTO CO_AUTH (
+            AUTH_CD,     AUTH_NM,      AUTH_DESC
+        )
+        VALUES (
+            #{authCd},   #{authNm},    #{authDesc}
+        )
+    </insert>
+    
+    <update id="update" parameterType="authBean">
+        UPDATE CO_AUTH 
+           SET AUTH_NM = #{authNm},
+               AUTH_DESC = #{authDesc}
+         WHERE AUTH_CD = #{authCd}
+    </update>
+    
+    <delete id="delete" parameterType="authBean">
+        DELETE 
+          FROM CO_AUTH
+         WHERE AUTH_CD = #{authCd}
+    </delete>
+
+    <!-- CO_AUTH_ITEM -->
+     
+    <select id="listAuthItemAll" resultType="menuBean" parameterType="map">   
+        SELECT A.MENU_CD      AS menuCd,
+               LPAD('^', (level-1)*4, '^') || A.MENU_NM AS menuNm,
+               A.HIGH_MENU_CD AS highMenuCd,
+               A.MENU_URL     AS menuUrl,
+               LEVEL          AS depth,
+               DECODE((SELECT MENU_CD FROM CO_AUTH_ITEM
+                 WHERE AUTH_CD = #{authCd}
+                   AND MENU_CD = A.MENU_CD), NULL, 'N', 'Y') AS checked,
+               (SELECT READ_YN || '^' || CREATE_YN || '^' || UPDATE_YN || '^' || DELETE_YN FROM CO_AUTH_ITEM
+                 WHERE AUTH_CD = #{authCd}
+                   AND MENU_CD = A.MENU_CD) AS text
+          FROM CO_MENU A
+         WHERE A.USE_YN = 'Y'
+         START WITH A.HIGH_MENU_CD = #{topMenuCd}
+                AND A.USE_YN = 'Y'
+       CONNECT BY PRIOR A.MENU_CD = A.HIGH_MENU_CD
+         ORDER SIBLINGS BY A.ORDER_NO
+    </select>
+
+    <delete id="deleteAuthItem" parameterType="int">
+        DELETE FROM CO_AUTH_ITEM
+         WHERE AUTH_CD = #{authCd}
+    </delete>
+    
+    <update id="insertAuthItem" parameterType="authItemBean">
+        INSERT INTO CO_AUTH_ITEM (
+            AUTH_CD,        MENU_CD,        READ_YN,
+            CREATE_YN,      UPDATE_YN,      DELETE_YN
+        )
+        VALUES (
+            #{authCd},      #{menuCd},      #{readYn},
+            #{createYn},    #{updateYn},    #{deleteYn}
+        ) 
+    </update>
+    
+    <!-- 
+    <update id="updateAuthItem" parameterType="authItemBean">
+        MERGE INTO CO_AUTH_ITEM
+        USING DUAL
+            ON (AUTH_CD = #{authCd} AND MENU_CD = #{menuCd})
+        WHEN MATCHED THEN
+            UPDATE SET
+                READ_YN = #{readYn},
+                CREATE_YN = #{createYn},
+                UPDATE_YN = #{updateYn},
+                DELETE_YN = #{deleteYn}
+        WHEN NOT MATCHED THEN
+            INSERT (
+                AUTH_CD,        MENU_CD,        READ_YN,
+                CREATE_YN,      UPDATE_YN,      DELETE_YN
+            )
+            VALUES (
+                #{authCd},      #{menuCd},      #{readYn},
+                #{createYn},    #{updateYn},    #{deleteYn}
+            )
+    </update> -->
+    
+    
+    <!-- CO_AUTH_ASSIGN -->
+    
+    <select id="listAuthAssign" resultType="authAssignBean" parameterType="string">
+        SELECT A.AUTH_NM AS authNm, 
+               A.AUTH_CD AS authCd,
+               DECODE((SELECT X.MGR_ID
+                         FROM CO_MGR X, CO_AUTH_ASSIGN Y 
+                        WHERE X.MGR_ID = Y.MGR_ID
+                          AND X.MGR_ID = #{mgrId}
+                          AND Y.AUTH_CD = A.AUTH_CD), NULL, 'N', 'Y') checked
+          FROM CO_AUTH A
+         WHERE A.SHOW_YN = 'Y'
+         ORDER BY A.AUTH_CD ASC
+    </select>
+    
+    <insert id="insertAuthAssign" parameterType="authAssignBean">
+        INSERT INTO CO_AUTH_ASSIGN (
+            AUTH_CD,     MGR_ID
+        )
+        VALUES (
+            #{authCd},   #{mgrId}
+        )
+    </insert>
+    
+    <delete id="deleteAuthAssign" parameterType="string">
+        DELETE FROM CO_AUTH_ASSIGN
+         WHERE MGR_ID = #{mgrId}
+    </delete>
+    
+    
+    <!-- CO_AUTH_ASSIGN_LOG -->
+    
+    <insert id="insertAuthAssignLog" parameterType="authAssignLogBean">
+        INSERT INTO CO_AUTH_ASSIGN_LOG (
+            MGR_ID,    ORDER_NO,      LOG_CONTENTS
+        )
+        VALUES (
+            #{mgrId},
+            (SELECT NVL(MAX(ORDER_NO), 0) + 1
+               FROM CO_AUTH_ASSIGN_LOG
+              WHERE MGR_ID = #{mgrId}),
+            #{logContents}
+        )
+    </insert>
+    
+    <select id="listAuthAssignLog" resultType="authAssignLogBean" parameterType="string">
+        SELECT ORDER_NO AS orderNo,
+               LOG_CONTENTS AS logContents,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt
+          FROM CO_AUTH_ASSIGN_LOG
+         WHERE MGR_ID = #{mgrId}
+         ORDER BY ORDER_NO DESC
+    </select>
+    
+    
+    <!-- For menu -->
+    
+    <select id="listAuthByMenu" resultType="authBean" parameterType="int">
+        SELECT A.AUTH_CD AS authCd,
+               A.AUTH_NM AS authNm
+          FROM CO_AUTH A, CO_AUTH_ITEM B
+         WHERE B.MENU_CD = #{menuCd}
+           AND A.AUTH_CD = B.AUTH_CD
+           AND A.SHOW_YN = 'Y'
+         ORDER BY A.AUTH_CD ASC
+    </select>
+    
+    
+    <!-- For mgr login -->
+    
+    <select id="listAuthByLogin" resultType="authBean" parameterType="string">
+        SELECT AUTH_CD AS authCd,
+               (SELECT AUTH_NM 
+                  FROM CO_AUTH 
+                 WHERE AUTH_CD = A.AUTH_CD
+                   AND SHOW_YN = 'Y') AS authNm
+          FROM CO_AUTH_ASSIGN A
+         WHERE A.MGR_ID = #{mgrId}
+    </select>
+    
+    <select id="listAuthItemByLogin" resultType="authItemBean" parameterType="string"> 
+        SELECT B.AUTH_CD AS authCd,
+               B.MENU_CD AS menuCd,
+               B.READ_YN AS readYn,
+               B.CREATE_YN AS createYn,
+               B.UPDATE_YN AS updateYn,
+               B.DELETE_YN AS deleteYn,
+               DECODE(C.MENU_PATTERN, NULL, '/**' || C.MENU_URL, C.MENU_PATTERN) AS menuPattern
+          FROM CO_AUTH_ASSIGN A, CO_AUTH_ITEM B, CO_MENU C
+         WHERE A.MGR_ID = #{mgrId}
+           AND A.AUTH_CD = B.AUTH_CD
+           AND B.MENU_CD = C.MENU_CD 
+           AND C.MENU_URL IS NOT NULL
+           AND C.USE_YN = 'Y'
+         ORDER BY B.MENU_CD
+    </select>
+    
+</mapper>

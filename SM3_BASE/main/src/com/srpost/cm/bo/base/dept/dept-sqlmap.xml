@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_dept">
+
+    <select id="list" resultType="deptBean" parameterType="deptBean">
+        SELECT A.DEPT_CD  AS id,
+               A.DEPT_NM  AS text,
+               DECODE(A.USE_YN, 'N', 'no-use') AS cls,
+               DECODE(
+                  (SELECT COUNT(DEPT_CD) 
+                     FROM CO_DEPT 
+                    WHERE HIGH_DEPT_CD = A.DEPT_CD), 0, 'true', 'false') AS leaf
+          FROM CO_DEPT A
+         WHERE A.DEPT_CD != #{topDeptCd}
+           AND A.HIGH_DEPT_CD = #{highDeptCd}
+           <if test="@Ognl@isNotEmpty(useYn)">
+               AND A.USE_YN = #{useYn}
+           </if>
+         ORDER BY A.ORDER_NO ASC
+    </select>
+    
+    <select id="view" resultType="deptBean" parameterType="deptBean">
+        SELECT HIGH_DEPT_CD AS highDeptCd,
+               DEPT_CD      AS deptCd,
+               DEPT_NM      AS deptNm,
+               DEPT_NM      AS text,
+               BRANCH_CD    AS branchCd,
+               FN_BRANCH_NM(BRANCH_CD) AS branchNm,
+               ORDER_NO     AS orderNo,
+               USE_YN       AS useYn,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_DEPT
+         WHERE DEPT_CD = #{deptCd}
+    </select>
+    
+    <insert id="insert" parameterType="deptBean">
+        INSERT INTO CO_DEPT (
+            DEPT_CD,      DEPT_NM,      HIGH_DEPT_CD,       BRANCH_CD,
+            ORDER_NO
+        )
+        VALUES (
+            #{deptCd},    #{deptNm},    #{highDeptCd},      #{branchCd},
+            (
+            SELECT NVL(MAX(ORDER_NO), 0) + 1
+              FROM CO_DEPT
+             WHERE HIGH_DEPT_CD = #{highDeptCd}
+            )
+        )
+    </insert>
+        
+    <update id="update" parameterType="deptBean">
+        UPDATE CO_DEPT 
+           SET 
+               <if test="@Ognl@isNotEmpty(deptNm)">
+                   DEPT_NM = #{deptNm},
+               </if>
+               <if test="@Ognl@isNotEmpty(branchCd)">
+                   BRANCH_CD = #{branchCd},
+               </if>
+               <if test="@Ognl@isNotEmpty(useYn)">
+                   USE_YN  = #{useYn},
+               </if>
+               MODI_DT = SYSDATE
+         WHERE DEPT_CD = #{deptCd}
+    </update>
+    
+    <update id="updateRecursive" parameterType="menuBean">
+        UPDATE CO_DEPT
+           SET USE_YN = #{useYn}
+         WHERE DEPT_CD IN ( 
+            SELECT DEPT_CD
+              FROM CO_DEPT
+             START WITH DEPT_CD = #{deptCd}
+            CONNECT BY PRIOR DEPT_CD = HIGH_DEPT_CD)    
+    </update>
+    
+    <update id="updateOrder" parameterType="deptBean">
+        UPDATE CO_DEPT 
+           SET ORDER_NO     = #{orderNo},
+               HIGH_DEPT_CD = #{highDeptCd}
+         WHERE DEPT_CD      = #{deptCd}
+    </update>
+
+    <select id="listSameLevel" resultType="deptBean" parameterType="deptBean"><![CDATA[
+        SELECT DEPT_CD      AS deptCd,
+               HIGH_DEPT_CD AS highDeptCd,
+               ORDER_NO     AS orderNo
+          FROM CO_DEPT
+         WHERE DEPT_CD     != #{topDeptCd}
+           AND DEPT_CD     != #{deptCd}
+           AND HIGH_DEPT_CD = #{highDeptCd}
+         ORDER BY ORDER_NO ASC
+    ]]></select>
+    
+    <delete id="delete" parameterType="deptBean">
+        DELETE 
+          FROM CO_DEPT
+         WHERE DEPT_CD = #{deptCd}
+    </delete>
+    
+    
+    <select id="listAllJSON" resultType="string" parameterType="string"><![CDATA[
+        WITH CONNECT_BY_QUERY AS (
+            SELECT ROWNUM   AS RNUM,
+                   '"id": "' || A.DEPT_CD || '", "text": "' || A.DEPT_NM || '"' AS FULL_ATTR,
+                   DECODE(
+                      (SELECT COUNT(DEPT_CD) 
+                         FROM CO_DEPT 
+                        WHERE HIGH_DEPT_CD = A.DEPT_CD AND USE_YN = 'Y'), 0, 'true', 'false') AS LEAF,
+                   LEVEL    AS LVL
+              FROM CO_DEPT A
+             WHERE A.USE_YN = 'Y'
+             START WITH A.HIGH_DEPT_CD = #{topDeptCd}
+                    AND A.USE_YN = 'Y'
+           CONNECT BY PRIOR A.DEPT_CD = A.HIGH_DEPT_CD
+             ORDER SIBLINGS BY A.ORDER_NO
+        )
+        SELECT 
+            CASE 
+                WHEN LVL = 1 AND RNUM = 1 THEN '{'
+                WHEN LVL - LAG(LVL) OVER (ORDER BY RNUM) = 1 THEN ',"children" : [{' 
+                ELSE ', {' 
+            END 
+            || FULL_ATTR || ', "leaf": ' || LEAF || 
+            CASE WHEN LEAD(LVL, 1, 1) OVER (ORDER BY RNUM) - LVL <= 0 THEN
+                      '}' || RPAD( ' ', 1+ (-2 * (LEAD(LVL, 1, 1) OVER (ORDER BY RNUM) - LVL)), ']}' )
+                 ELSE NULL 
+            END AS JSON_SNIPPET
+          FROM CONNECT_BY_QUERY
+         ORDER BY RNUM
+    ]]></select>
+    
+    <select id="listAll" resultType="deptBean" parameterType="string">
+        SELECT DEPT_CD AS deptCd,
+               DEPT_NM AS deptNm,
+               LEVEL   AS depth
+          FROM CO_DEPT
+         WHERE USE_YN = 'Y'
+         START WITH HIGH_DEPT_CD = #{topDeptCd}
+                AND USE_YN = 'Y'
+       CONNECT BY PRIOR DEPT_CD = HIGH_DEPT_CD
+         ORDER SIBLINGS BY ORDER_NO    
+    </select>
+    
+</mapper>

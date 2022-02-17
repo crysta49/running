@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+       xmlns:p="http://www.springframework.org/schema/p" 
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+                           http://www.springframework.org/schema/task 
+                           http://www.springframework.org/schema/task/spring-task-3.2.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+
+    <task:scheduled-tasks scheduler="myScheduler">
+        <!-- every 1 minutes -->
+        <task:scheduled ref="multipleCacheReloadScheduler" method="doSchedule" fixed-delay="60000" initial-delay="30000"/>
+        <!-- every 10 minutes -->
+        <task:scheduled ref="mgrAbsenceCheckScheduler" method="doSchedule" fixed-delay="600000" initial-delay="30000"/>
+        
+        <!-- <task:scheduled ref="xxxx" method="xxxx" fixed-rate="5000" initial-delay="30000"/> -->
+    </task:scheduled-tasks>
+    
+    <task:scheduler id="myScheduler" pool-size="10" />
+    
+    <!-- 다중 서버환경 캐시정보 리로드 스케줄러 -->
+    <bean id="multipleCacheReloadScheduler" class="com.srpost.salmon.scheduelr.MultipleCacheReloadScheduler" depends-on="cacheManager" />
+    <!-- 부재중 직원 부재기간 체크 스케줄러 -->
+    <bean id="mgrAbsenceCheckScheduler" class="com.srpost.cm.bo.base.mgr.absence.MgrAbsenceCheckScheduler" depends-on="cacheManager" />
+    
+</beans>

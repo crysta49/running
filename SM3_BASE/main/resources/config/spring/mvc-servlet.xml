@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+       xmlns:p="http://www.springframework.org/schema/p" 
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/mvc
+                           http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+                           http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+
+    <context:component-scan base-package="com.srpost.cm, com.srpost.salmon.web.mvc" use-default-filters="false">
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+        <context:include-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+    </context:component-scan>
+    
+    <!-- CSRF 취약점 방어용 hidden 토큰처리를 위한 Processor : spring form tag에 hidden 값을 자동으로 추가함 -->
+    <bean name="requestDataValueProcessor" class="com.srpost.salmon.web.interceptor.csrf.CSRFRequestDataValueProcessor"/>
+    
+    <mvc:interceptors>
+        <!-- No cache 설정 -->
+        <bean class="org.springframework.web.servlet.mvc.WebContentInterceptor">
+            <property name="cacheSeconds" value="0" />
+            <property name="useExpiresHeader" value="true" />
+            <property name="useCacheControlHeader" value="true" />
+            <property name="useCacheControlNoStore" value="true" />
+        </bean>
+        
+        <!-- filter에서 발생한 exception 처리 (filter에서 request.setAttribute 해준 exception들을 처리) -->
+        <mvc:interceptor>
+            <mvc:mapping path="/**" />
+            <bean class="com.srpost.salmon.web.interceptor.FilterExceptionInterceptor"/>
+        </mvc:interceptor>
+        
+        <!-- CSRF 취약점 방어용 인터셉터 -->
+        <mvc:interceptor>
+            <mvc:mapping path="/**/*Action.do" />
+            <bean class="com.srpost.salmon.web.interceptor.csrf.CSRFHandlerInterceptor"/>
+        </mvc:interceptor>
+        
+        <!-- CORS 인터셉터
+        <bean class="com.srpost.salmon.web.interceptor.CorsInterceptor" /> -->
+        
+        <!-- 파라메타 설정 인터셉터 : param을 smp로 대체 -->
+        <bean class="com.srpost.salmon.web.interceptor.ParameterInterceptor" />
+        
+        <!-- 디버그 로깅 인터셉터 -->
+        <mvc:interceptor>
+            <mvc:mapping path="/bo/**" />
+            <bean class="com.srpost.salmon.web.interceptor.LoggingInterceptor" />
+        </mvc:interceptor>
+
+        <!-- 관리자단 접근 허가 IP 체크 인터셉터. 하나 골라쓰기.
+             - AdminPageAccessInterceptor : salmon.jar 안에 있음. core-config.xml에 정의된 허용 ip목록으로 체크. AntPathMatcher 사용.
+             - IpFilterInterceptor : DB에 저장된 허용 ip목록으로 체크. SI_IP_FILTER 테이블과 com.srpost.cm.bo.si.ipFilter 패키지 설치 필요.
+                                     ip를 Long으로 값변환해서 비교. IPv4형식만 사용 가능하므로 상황에 따라 was에 vm argument 추가 필요. "-Djava.net.preferIPv4Stack=true" 
+         -->
+        <mvc:interceptor>
+            <mvc:mapping path="/bo/base/login/NR_loginForm.do" />
+            <!-- <bean class="com.srpost.salmon.web.interceptor.AdminPageAccessInterceptor" /> -->
+            <bean class="com.srpost.cm.bo.si.ipFilter.interceptor.IpFilterInterceptor" />
+        </mvc:interceptor>
+        
+        <!-- 직원 로그인 세션 체크 인터셉터 -->
+        <mvc:interceptor>
+            <mvc:mapping path="/bo/**" />
+            <mvc:exclude-mapping path="/bo/base/login/**"/>
+            <bean class="com.srpost.salmon.web.interceptor.MgrSessionCheckInterceptor" />
+        </mvc:interceptor>
+        
+        <!-- 대리인 접근 거부용 URL 체크 인터셉터 -->
+        <mvc:interceptor>
+            <mvc:mapping path="/bo/**/mgr/NR_formSelf.do" />
+            <mvc:mapping path="/bo/**/mgr/absence/NR_index.do" />
+            <mvc:mapping path="/bo/**/fm/prgn/NR_index.do" />
+            <bean class="com.srpost.salmon.web.interceptor.AgencyAccessCheckInterceptor" />
+        </mvc:interceptor>
+        
+        <!-- CRUD 권한 체크용 인터셉터 -->
+        <mvc:interceptor>
+            <mvc:mapping path="/bo/**/NR_*" />
+            <mvc:exclude-mapping path="/bo/base/explorer/**"/>
+            <mvc:exclude-mapping path="/bo/base/login/**"/>
+            <mvc:exclude-mapping path="/bo/base/file/**"/>
+            <bean class="com.srpost.salmon.web.interceptor.AuthCheckInterceptor" />
+        </mvc:interceptor>
+        
+        <!-- 메뉴정보 인터셉터 -->
+        <mvc:interceptor>
+            <mvc:mapping path="/bo/**" />
+            <mvc:exclude-mapping path="/bo/**/PR_*.do" />
+            <mvc:exclude-mapping path="/bo/**/AR_*.do" />
+            <mvc:exclude-mapping path="/bo/**/TR_*.do" />
+            <mvc:exclude-mapping path="/bo/**/JR_*.do" />
+            <mvc:exclude-mapping path="/bo/**/XR_*.do" />
+            <mvc:exclude-mapping path="/bo/base/login/*.do"/>            
+            <bean class="com.srpost.cm.bo.base.menu.MenuInterceptor" />
+        </mvc:interceptor>
+        
+        <!-- 사용자단 메뉴 인터셉터 -->  <!-- 프론트 구축시에만 사용
+        <mvc:interceptor>
+            <mvc:mapping path="/fe/**/NR_*" />
+            <bean class="com.srpost.cm.fe.common.interceptor.FeMenuFrontInterceptor" />
+        </mvc:interceptor> -->
+        
+        <!-- 사용자단 로그인 세션 체크 인터셉터 -->  <!-- 회원제 프론트 구축시에만 사용
+        <mvc:interceptor>
+            <mvc:mapping path="/fe/mypage/**" />
+            <mvc:mapping path="/fe/leave/**" />
+            <bean class="com.srpost.salmon.web.interceptor.UserSessionCheckInterceptor" />
+        </mvc:interceptor> -->
+        
+    </mvc:interceptors>
+    
+    
+    <!-- **************************************************************** -->
+    <!-- SPRING ANNOTATION PROCESSING -->
+    <!-- **************************************************************** -->
+    <mvc:annotation-driven />
+
+        
+    <!-- **************************************************************** -->
+    <!-- VIEW RESOLVER -->
+    <!-- **************************************************************** -->
+    <bean 
+        class="org.springframework.web.servlet.view.BeanNameViewResolver"
+        p:order="1" />
+        
+    <bean 
+        class="org.springframework.web.servlet.view.InternalResourceViewResolver" 
+        p:order="2"
+        p:viewClass="org.springframework.web.servlet.view.JstlView"
+        p:prefix="/WEB-INF/jsp/"
+        p:suffix=".jsp" />
+
+    <bean 
+        id="jsonView" 
+        class="com.srpost.salmon.web.mvc.view.JsonView" 
+        p:contentType="application/json; charset=UTF-8" />
+    
+    <bean 
+        id="textView" 
+        class="com.srpost.salmon.web.mvc.view.TextView" 
+        p:contentType="text/plain; charset=UTF-8" />
+    
+    <bean 
+        id="excelView" 
+        class="com.srpost.salmon.web.mvc.view.ExcelView" 
+        p:contentType="application/vnd.ms-excel; charset=UTF-8" 
+        p:fromCharset="KSC5601"
+        p:toCharset="8859_1"
+        p:useEncoding="true"
+        p:useUrlEncoding="true" />
+    
+    <bean 
+        id="fileDownloadView" 
+        class="com.srpost.salmon.web.mvc.view.FileDownloadView" 
+        p:fromCharset="KSC5601"
+        p:toCharset="8859_1"
+        p:useEncoding="true"
+        p:useUrlEncoding="true"
+        p:illegalArgumentMessage="요청 정보가 올바르게 전달되지 않았습니다."
+        p:fileNotFountErrorMessage="파일이 삭제되었거나 존재하지 않습니다."
+        p:mimeLocation="classpath:config/prop/mime.types" />
+    
+</beans>
+
+

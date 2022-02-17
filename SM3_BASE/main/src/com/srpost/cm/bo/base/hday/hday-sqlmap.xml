@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_hday">
+
+    <select id="list" resultType="hdayBean">
+        SELECT SEQ      AS seq,
+               HDAY_NM  AS hdayNm,
+               USE_YN   AS useYn,
+               TO_CHAR(TO_DATE(START_DD, 'YYYYMMDD'), 'YYYY-MM-DD') AS startDd
+          FROM CO_HDAY
+         ORDER BY START_DD ASC
+    </select>
+    
+    <select id="view" resultType="hdayBean" parameterType="hdayBean">
+        SELECT SEQ       AS seq,
+               HDAY_NM   AS hdayNm,
+               LUNAR_YN  AS lunarYn,
+               CYCLE     AS cycle,
+               WEEK      AS week,
+               DOW       AS dow,
+               USE_YN    AS useYn,
+               TO_CHAR(TO_DATE(START_DD, 'YYYYMMDD'), 'YYYY-MM-DD') AS startDd,
+               TO_CHAR(TO_DATE(END_DD, 'YYYYMMDD'), 'YYYY-MM-DD') AS endDd,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_HDAY
+         WHERE SEQ = #{seq}
+    </select>
+    
+    <insert id="insert" parameterType="hdayBean">
+        INSERT INTO CO_HDAY (
+            SEQ,         HDAY_NM,         START_DD,
+            END_DD,      LUNAR_YN,        CYCLE,
+            WEEK,        DOW
+        )
+        VALUES (
+            #{seq},      #{hdayNm},       #{startDd},
+            #{endDd},    #{lunarYn},      #{cycle},
+            #{week},     #{dow}
+        )
+    </insert>
+    
+    <update id="update" parameterType="hdayBean">
+        UPDATE CO_HDAY 
+           SET
+               HDAY_NM  = #{hdayNm},
+               LUNAR_YN = #{lunarYn},
+               CYCLE    = #{cycle},
+               WEEK     = #{week},
+               DOW      = #{dow},
+               USE_YN   = #{useYn},
+               START_DD = #{startDd},
+               END_DD   = #{endDd},
+               MODI_DT  = SYSDATE
+         WHERE SEQ = #{seq}
+    </update>
+    
+    <delete id="delete" parameterType="hdayBean">
+        DELETE 
+          FROM CO_HDAY
+         WHERE SEQ = #{seq}
+    </delete>
+    
+    
+    <select id="listCache" resultType="hdayBean">
+        SELECT HDAY_NM   AS hdayNm,
+               LUNAR_YN  AS lunarYn,
+               CYCLE     AS cycle,
+               WEEK      AS week,
+               DOW       AS dow,
+               START_DD  AS startDd,
+               END_DD    AS endDd
+          FROM CO_HDAY
+         WHERE USE_YN = 'Y'
+         ORDER BY START_DD ASC
+    </select>
+    
+</mapper>

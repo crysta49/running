@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_ipFilter">
+    
+    <sql id="dynamicWhere">
+        <if test="@Ognl@isNotEmpty(searchVal)">
+            <if test="searchKey == 1000">
+                AND IP_NM LIKE '%' || #{searchVal} || '%'
+            </if>
+        </if>
+    </sql>
+    
+    <sql id="dynamicSort">
+        <if test="@Ognl@isNotEmpty(sortName)">
+            ORDER BY
+            <if test="sortName == 'ipNm'">IP_NM</if>
+            <if test="sortName == 'regDt'">REG_DT</if>
+            ${sortOrder}
+        </if>
+    </sql>
+    
+    <select id="list" resultType="ipFilterBean" parameterType="map">
+    SELECT Y.* FROM (
+        SELECT ROWNUM NUM, X.* FROM (
+            SELECT /*+ INDEX_DESC(SI_IP_FILTER) */
+                   IP_SEQ    AS ipSeq,
+                   IP_NM     AS ipNm,
+                   START_IP  AS startIp,
+                   END_IP    AS endIp,
+                   USE_YN    AS useYn,
+                   REG_ID    AS regId,
+                   FN_MGR_NM(REG_ID)              AS regNm,
+                   TO_CHAR(REG_DT, 'YYYY-MM-DD') AS regDt,
+                   TO_CHAR(MODI_DT, 'YYYY-MM-DD') AS modiDt
+              FROM SI_IP_FILTER
+             WHERE 1 = 1
+                   <include refid="dynamicWhere" />
+                   <include refid="dynamicSort" />
+             ) X
+            WHERE ROWNUM &lt;= #{pagingEndNum}
+         ) Y
+         WHERE NUM &gt;= #{pagingStartNum}
+    </select>
+    
+    <select id="simpleList" resultType="IpFilterBean">
+        SELECT START_IP  AS startIp,
+               END_IP    AS endIp
+          FROM SI_IP_FILTER
+         WHERE USE_YN = 'Y'
+    </select>
+    
+    <select id="listCount" resultType="int" parameterType="map">
+        SELECT COUNT(IP_SEQ) AS totalCount
+          FROM SI_IP_FILTER
+         WHERE 1 = 1
+               <include refid="dynamicWhere" />
+    </select>
+    
+    <select id="view" resultType="ipFilterBean" parameterType="ipFilterBean">
+        SELECT IP_SEQ      AS ipSeq,
+               IP_NM       AS ipNm,
+               START_IP    AS startIp,
+               END_IP      AS endIp,
+               USE_YN      AS useYn,
+               REG_ID      AS regId,
+               FN_MGR_NM(REG_ID) AS regNm,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD') AS modiDt
+          FROM SI_IP_FILTER
+         WHERE IP_SEQ = #{ipSeq}
+    </select>
+    
+    <insert id="insert" parameterType="ipFilterBean">
+        INSERT INTO SI_IP_FILTER (
+            IP_SEQ,        IP_NM,         START_IP,         END_IP,
+            REG_ID,        USE_YN,        REG_DT
+        )
+        VALUES (
+            #{ipSeq},      #{ipNm},       #{startIp},       #{endIp},
+            #{regId},      #{useYn},      SYSDATE
+        )
+    </insert>
+    
+    <update id="update" parameterType="ipFilterBean">
+        UPDATE SI_IP_FILTER
+           SET IP_NM      = #{ipNm},
+               START_IP   = #{startIp},
+               END_IP     = #{endIp},
+               REG_ID     = #{regId},
+               USE_YN     = #{useYn},
+               MODI_DT    = SYSDATE
+         WHERE IP_SEQ = #{ipSeq}
+    </update>
+    
+    <delete id="delete" parameterType="ipFilterBean">
+        DELETE 
+          FROM SI_IP_FILTER
+         WHERE 1 = 1
+             <if test="@Ognl@isNotEmpty(ipSeqs)">
+                 AND IP_SEQ IN
+                 <foreach collection="ipSeqs" index="index" open="(" close=")" separator=", " item="entry">
+                     #{entry}
+                 </foreach>
+             </if>
+    </delete>
+    
+</mapper>

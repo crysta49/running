@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+
+    <system>
+        <appNm>Salmon</appNm>
+        <appVersion>3.0</appVersion>
+        <appBuild>2014</appBuild>
+        <systemNm>통합시스템</systemNm>
+        <clientNm>에스알포스트</clientNm>
+        <adminDeptNm>기술연구소</adminDeptNm>
+        <adminMgrNm>홍길동</adminMgrNm>
+        <adminTelNo>02-111-2222</adminTelNo>
+        <address><![CDATA[
+            <div style="margin-top: 10px; line-height: 18px;">
+                (우)152-768 서울시 구로구 디지털로 272 1208호 (구로동 235 한신IT타워 1차)
+                <br/>대표전화:02-845-5218 고객불편신고센터 Tel:1544-5218 Fax:02-2179-8921
+                <br/>Copyright © 2012 by SR-POST All Right Reserved.
+            </div>
+        ]]></address>
+    </system>
+    
+    <default>
+        <webRootKey>sm.webapp.root</webRootKey>
+        <encoding>UTF-8</encoding>
+        <!-- 운영단계에서는 false 설정 / 개발단계에서는 true -->
+        <devMode>true</devMode>
+        <dbType>oracle</dbType>
+        <theme>classic</theme> <!-- "classic", "blue", "red" -->
+        <extjsTheme>gray</extjsTheme> <!-- "classic", "gray" -->
+        <hostUrl>http://localhost</hostUrl>
+    </default>
+    
+    <salmon>
+        <!-- 디버깅용 로깅 설정 -->
+        <loggig>
+            <request>true</request>
+            <uri>true</uri>
+            <params>true</params>
+            <controller>true</controller>
+            <sql>true</sql>
+            <view>true</view>
+            <elapsed>true</elapsed>
+            <skipUrls> <!-- 로깅 제외 URL 패턴 : Ant style path pattern -->
+                <url>/**/base/note/TR_count*</url>
+                <url>/**/base/login/*</url>
+            </skipUrls>
+            <skipParams> <!-- 로깅 제외 파라메타 -->
+                <param>_dc</param>
+                <param>node</param>
+                <param>offset</param>
+                <param>mgrEncPwd</param>
+            </skipParams>
+        </loggig>
+    
+        <!-- 페이징 설정 -->
+        <pager>
+            <rowPerPage>10</rowPerPage>
+            <pagePerPage>10</pagePerPage> <!-- SM_GRID 적용 시에는 미사용 -->
+        </pager>
+        
+        <!-- Global 예외처리 View 정보 설정 : 경로 변경 없을 시에는 불필요함 -->
+        <exception>
+            <boUrl>bo/common/exception/GLOBAL_EXCEPTION</boUrl>
+            <feUrl>fe/common/exception/GLOBAL_EXCEPTION</feUrl>
+            <stackTrace>false</stackTrace>
+        </exception>
+        
+        <base>
+            <topDeptCd>0</topDeptCd> <!-- 최상위 부서코드 -->
+            <topMenuCd>0</topMenuCd> <!-- 최상위 메뉴코드 -->
+            <topCtgCd>0</topCtgCd> <!-- 최상위 분류코드 -->
+            <readCntMinutes>30</readCntMinutes> <!-- 조회수 증가 주기(분) -->
+            
+            <dept>
+                <isDeptConnect>false</isDeptConnect> <!-- 조직도 연계 여부 -->
+                <useBranch>true</useBranch> <!-- 부점코드 사용여부 -->
+            </dept>
+
+            <auth>
+                <systemAuthCd>1000</systemAuthCd> <!-- 운영자 권한그룹 코드 -->
+            </auth>
+        
+            <login>
+                <useLoginLog>true</useLoginLog> <!-- 접속자 로그 기록 여부 -->
+                <useLimit>true</useLimit> <!-- 로그인 시도 제한 사용 여부 -->
+                <retryCount>3</retryCount> <!-- 로그인 시도 제한 횟수 -->
+                <delaySec>30</delaySec> <!-- 재로그인 가능 대기 시간 (sec) -->
+                <access> <!-- 관리자단 로그인 허가 IP -->
+                    <!-- <ip>127.0.0.1</ip>
+                    <ip>192.168.*.*</ip>
+                    <ip>61.37.196.1*</ip> -->
+                </access>
+            </login>
+            
+            <multiLogin>
+                <useMultiLogin>true</useMultiLogin> <!-- 중복 로그인 허용 여부 -->
+                <forceExpired>false</forceExpired> <!-- 중복 로그인 시 이전 세션 강제 종료 -->
+            </multiLogin>
+            
+            <faq>
+                <maxUploadCnt>4</maxUploadCnt>
+            </faq>
+            
+            <instrf>
+                <maxUploadCnt>4</maxUploadCnt>
+            </instrf>
+            
+            <!-- 스케줄러 제외 대상 서버 정보 : 다중서버 환경 시 사용
+            <scheduler>
+                <exclude>192.168.1.8</exclude>
+            </scheduler> -->
+        </base>
+    </salmon>
+    
+    <!-- dev, test, run
+    <serverType>
+        <devIp>192.168.1.*</devIp>
+        <testIp>192.168.1.*|10.1.4.*</testIp>
+        <runIp>10.1.3.220|10.1.4.*</runIp>
+    </serverType> -->
+    
+</configuration>

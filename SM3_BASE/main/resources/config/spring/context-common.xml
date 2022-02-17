@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+       xmlns:p="http://www.springframework.org/schema/p" 
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+
+    <context:component-scan base-package="com.srpost.cm">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+        <context:exclude-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+    </context:component-scan>
+
+    <bean 
+        id="messageSource" 
+        class="org.springframework.context.support.ReloadableResourceBundleMessageSource" 
+        p:defaultEncoding="UTF-8">
+        <property name="basenames">
+            <list>
+                <value>classpath:/config/i18n/message</value>
+                <value>classpath:/egovframework/message/com/message-common</value>
+                <value>classpath:/egovframework/rte/fdl/idgnr/messages/idgnr</value>
+                <value>classpath:/egovframework/rte/fdl/property/messages/properties</value>
+                <value>classpath:/egovframework/egovProps/globals</value>
+            </list>
+        </property>
+    </bean>
+    
+    <!-- i18N -->
+    <bean
+        id="message"
+        class="com.srpost.salmon.constant.Message" />
+    
+    <!-- Initializing apache's commons-configuration -->
+    <bean 
+        id="commonConfigInitializer" 
+        class="com.srpost.salmon.spi.commonsconfig.CommonsConfigInitialzer" 
+        p:configLocation="classpath:/config/prop/core.xml" />
+
+    <!-- Template engine -->
+    <bean id="velocityEngine" class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
+        <property name="resourceLoaderPath" value="classpath:/config/template"/>
+        <property name="preferFileSystemAccess" value="false"/>
+        <property name="velocityProperties">
+            <props>
+                <prop key="default.contentType">text/html; charset=utf-8</prop>
+                <prop key="output.encoding">utf-8</prop>
+                <prop key="input.encoding">utf-8</prop>
+            </props>
+        </property>
+    </bean>
+    
+    <bean 
+        id="multipartResolver" 
+        class="com.srpost.salmon.spi.springmvc.resolver.SalmonMultipartResolver"
+        p:defaultEncoding="UTF-8"
+        p:uploadTempDir="/upload/temp"
+        p:uploadRealDir=""
+        p:maxSize="1048576"
+        p:permitExtensions="jpg, jpeg, gif, png, bmp, txt, zip, hwp*, doc*, ppt*, xls*" />
+        
+        <!-- uploadRealDir : FULL_PATH -->
+        <!-- bytes --> <!-- 1024*1024 = 1 MB -->
+        <!-- 
+        p:maxUploadSize="1048576"
+        p:maxInMemorySize="102400" -->
+    
+    <!-- 테스트용 SMTP TA프로젝트만 사용하고 다른곳에 가서 절대 사용하지 말것!!!!! -->
+    <bean 
+        id="emailSender" 
+        class="com.srpost.salmon.spi.sender.EmailSender" 
+        p:host="smtp.worksmobile.com"
+        p:port="465"
+        p:timeout="3000"
+        p:ssl="true"
+        p:username="test@srpost.co.kr"
+        p:password="srpost5218"
+        p:from="test@srpost.co.kr"
+        p:prefix="[통합민원시스템]"
+        p:html="true"
+        p:debug="false" depends-on="commonConfigInitializer"/>
+    
+    <!-- 61.37.196.12 대역 설정됨 이외 대역에서는 발송 안됨!!!! -->
+    <bean 
+        id="smsSender" 
+        class="com.srpost.salmon.spi.sender.SmsSender" 
+        p:from="02-845-5218"
+        p:fromNm="SRPOST"
+        p:limit="80"
+        p:postfix="[SRPOST]"
+        p:removeDash="true">
+        <property name="smsHandler">
+            <bean class="com.srpost.salmon.spi.sender.xonda.XondaSmsHandler" />
+        </property>
+    </bean>
+    
+    <!-- TODO :  
+    NoteSender .... 
+    -->
+    
+    <bean id="antPathMatcher" class="org.springframework.util.AntPathMatcher" />
+    
+</beans>

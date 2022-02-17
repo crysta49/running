@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_bbsExt">
+
+    <select id="view" resultType="map" parameterType="map">
+        SELECT 
+            <foreach collection="COLUMNZ" index="index" separator=",">
+                ${COLUMNZ[index]}
+            </foreach>
+          FROM ${TABLE_NM}
+         WHERE BBS_CD  = #{BBS_CD}
+           AND BBS_SEQ = #{BBS_SEQ}
+    </select>    
+                 
+    <insert id="insert" parameterType="map">
+        MERGE INTO ${TABLE_NM}
+        USING DUAL
+            ON (BBS_CD = #{BBS_CD} AND BBS_SEQ = #{BBS_SEQ})
+        WHEN MATCHED THEN
+            UPDATE
+                <set>
+                    <foreach collection="COLUMNZ" index="key" item="entry" separator=",">
+                        ${key} = #{entry}
+                    </foreach>
+                </set>
+        WHEN NOT MATCHED THEN
+            INSERT (
+                BBS_CD,         BBS_SEQ,
+                <foreach collection="COLUMNZ" index="key" item="entry" separator=",">
+                    ${key}
+                </foreach>
+            )
+            VALUES (
+                #{BBS_CD},      #{BBS_SEQ},
+                <foreach collection="COLUMNZ" index="key" item="entry" separator=",">
+                    #{entry}
+                </foreach>
+            )
+    </insert>
+
+</mapper>

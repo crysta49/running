@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_bbsConf">
+
+    <sql id="dynamicWhere">
+        <if test="@Ognl@isNotEmpty(typeCd)">
+            AND TYPE_CD  = #{typeCd}
+        </if>
+        <if test="@Ognl@isNotEmpty(useYn)">
+            AND USE_YN = #{useYn}
+        </if>
+        <if test="@Ognl@isNotEmpty(searchVal)">
+            <if test="searchKey == 1000">
+                AND BBS_NM LIKE '%' || #{searchVal} || '%'
+            </if>
+        </if>
+        <if test="@Ognl@isNotEmpty(startDt)">
+            AND REG_DT &gt;= TO_DATE(#{startDt}, 'YYYYMMDDHH24MISS')
+        </if>
+        <if test="@Ognl@isNotEmpty(endDt)">
+            AND REG_DT &lt;= TO_DATE(#{endDt}, 'YYYYMMDDHH24MISS')
+        </if>
+    </sql>
+    
+    <sql id="dynamicSort">
+        <if test="@Ognl@isNotEmpty(sortName)">
+            ORDER BY
+            <if test="sortName == 'bbsNm'">BBS_NM</if>
+            <if test="sortName == 'regDt'">REG_DT</if>
+            ${sortOrder}
+        </if>
+    </sql>
+
+    <select id="list" resultType="bbsConfBean" parameterType="map">
+        SELECT Y.* FROM (
+            SELECT ROWNUM NUM, X.* FROM (
+                SELECT /*+ INDEX_DESC(CO_BBS_CONF) */
+                       BBS_CD     AS bbsCd,
+                       BBS_NM     AS bbsNm,
+                       FN_PRV_NM(TYPE_CD, 'BBS_TYPE') AS typeNm,
+                       FOLDER_NM  AS folderNm,
+                       TABLE_NM   AS tableNm,
+                       CMT_YN     AS cmtYn,
+                       CTG_YN     AS ctgYn,
+                       FILE_YN    AS fileYn,
+                       FILE_CNT   AS fileCnt,
+                       OPEN_YN    AS openYn,
+                       NTC_YN     AS ntcYn,
+                       HTML_YN    AS htmlYn,
+                       ADM_YN     AS admYn,
+                       ALIM_YN    AS alimYn,
+                       USE_YN     AS useYn,
+                       TO_CHAR(REG_DT, 'YYYY-MM-DD') AS regDt,
+                       TO_CHAR(MODI_DT, 'YYYY-MM-DD') AS modiDt
+                  FROM CO_BBS_CONF
+                 WHERE 1 = 1
+                       <include refid="dynamicWhere" />
+                       <include refid="dynamicSort" />
+                ) X
+            WHERE ROWNUM &lt;= #{pagingEndNum}
+         ) Y
+         WHERE NUM &gt;= #{pagingStartNum}
+    </select>
+    
+    <select id="listCount" resultType="int" parameterType="map">
+        SELECT COUNT(BBS_CD) AS totalCount
+          FROM CO_BBS_CONF
+         WHERE 1 = 1
+               <include refid="dynamicWhere" />
+    </select>
+    
+    <select id="listExcel" resultType="bbsConfBean" parameterType="map">
+        SELECT /*+ INDEX_DESC(CO_BBS_CONF) */
+               BBS_CD     AS bbsCd,
+               BBS_NM     AS bbsNm,
+               TYPE_CD    AS typeCd,
+               FN_PRV_NM(TYPE_CD, 'BBS_TYPE') AS typeNm,
+               FOLDER_NM  AS folderNm,
+               TABLE_NM   AS tableNm,
+               CMT_YN     AS cmtYn,
+               CTG_YN     AS ctgYn,
+               FILE_YN    AS fileYn,
+               FILE_CNT   AS fileCnt,
+               OPEN_YN    AS openYn,
+               NTC_YN     AS ntcYn,
+               HTML_YN    AS htmlYn,
+               ADM_YN     AS admYn,
+               ALIM_YN    AS alimYn,
+               USE_YN     AS useYn,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD') AS modiDt
+          FROM CO_BBS_CONF
+         WHERE 1 = 1
+               <include refid="dynamicWhere" />
+               <include refid="dynamicSort" />
+    </select>
+    
+    <select id="view" resultType="bbsConfBean" parameterType="bbsConfBean">
+        SELECT BBS_CD     AS bbsCd,
+               BBS_NM     AS bbsNm,
+               TYPE_CD    AS typeCd,
+               FN_PRV_NM(TYPE_CD, 'BBS_TYPE') AS typeNm,
+               FOLDER_NM  AS folderNm,
+               TABLE_NM   AS tableNm,
+               CMT_YN     AS cmtYn,
+               CTG_YN     AS ctgYn,
+               FILE_YN    AS fileYn,
+               FILE_CNT   AS fileCnt,
+               OPEN_YN    AS openYn,
+               NTC_YN     AS ntcYn,
+               HTML_YN    AS htmlYn,
+               ADM_YN     AS admYn,
+               ALIM_YN    AS alimYn,
+               USE_YN     AS useYn,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_BBS_CONF
+         WHERE BBS_CD = #{bbsCd}
+    </select>
+    
+    <insert id="insert" parameterType="bbsConfBean">
+        INSERT INTO CO_BBS_CONF (
+            BBS_CD,        BBS_NM,       TYPE_CD,      FOLDER_NM,  CMT_YN,
+            CTG_YN,        FILE_YN,      FILE_CNT,     OPEN_YN,    NTC_YN,
+            TABLE_NM,      HTML_YN,      ADM_YN,       ALIM_YN
+        )
+        VALUES (
+            #{bbsCd},      #{bbsNm},     #{typeCd},    #{folderNm},  #{cmtYn},
+            #{ctgYn},      #{fileYn},    #{fileCnt},   #{openYn},  #{ntcYn},
+            #{tableNm},    #{htmlYn},    #{admYn},     #{alimYn}
+        )
+    </insert>
+        
+    <update id="update" parameterType="bbsConfBean">
+        UPDATE CO_BBS_CONF SET
+               BBS_NM     = #{bbsNm},
+               TYPE_CD    = #{typeCd},
+               FOLDER_NM  = #{folderNm},
+               TABLE_NM   = #{tableNm},
+               CMT_YN     = #{cmtYn},
+               CTG_YN     = #{ctgYn},
+               FILE_YN    = #{fileYn},
+               FILE_CNT   = #{fileCnt},
+               OPEN_YN    = #{openYn},
+               NTC_YN     = #{ntcYn},
+               ADM_YN     = #{admYn},
+               HTML_YN    = #{htmlYn},
+               ALIM_YN    = #{alimYn},
+               USE_YN     = #{useYn},
+               MODI_DT    = SYSDATE
+         WHERE BBS_CD = #{bbsCd}
+    </update>
+    
+    <delete id="delete" parameterType="bbsConfBean">
+        DELETE 
+          FROM CO_BBS_CONF
+         WHERE 1 = 1
+             <if test="@Ognl@isNotEmpty(bbsCds)">
+                 AND BBS_CD IN 
+                 <foreach collection="bbsCds" index="index" open="(" close=")" separator=", " item="entry">
+                     #{entry}
+                 </foreach>
+             </if>
+    </delete>
+    
+    
+    <!-- CO_BBS_CTG -->
+    
+    <select id="listBbsCtg" resultType="bbsCtgBean" parameterType="int">
+        SELECT CTG_CD   AS ctgCd,
+               CTG_NM   AS ctgNm,
+               ORDER_NO AS orderNo
+          FROM CO_BBS_CTG
+         WHERE BBS_CD = #{bbsCd}
+         ORDER BY ORDER_NO ASC
+    </select>
+    
+    <insert id="inserBbsCtg" parameterType="bbsCtgBean">
+        INSERT INTO CO_BBS_CTG (
+            BBS_CD,    CTG_CD,     CTG_NM,     ORDER_NO
+        )
+        VALUES  (
+            #{bbsCd},  #{ctgCd},   #{ctgNm},   #{orderNo}
+        )
+    </insert>
+    
+    <delete id="deleteBbsCtgAll" parameterType="int">
+        DELETE 
+          FROM CO_BBS_CTG
+         WHERE BBS_CD = #{bbsCd}
+    </delete>
+    
+    
+    <!-- CO_BBS_MGR -->
+    
+    <select id="listBbsMgr" resultType="bbsMgrBean" parameterType="int">
+        SELECT MGR_ID AS mgrId,
+               FN_MGR_NM(MGR_ID) AS mgrNm,
+               FN_DEPT_NM_BY_MGR(MGR_ID) AS deptNm
+          FROM CO_BBS_MGR
+         WHERE BBS_CD = #{bbsCd}
+    </select>
+    
+    <insert id="inserBbsMgr" parameterType="bbsMgrBean">
+        INSERT INTO CO_BBS_MGR (
+            BBS_CD,    MGR_ID
+        )
+        VALUES  (
+            #{bbsCd},  #{mgrId}
+        )
+    </insert>
+    
+    <delete id="deleteBbsMgrAll" parameterType="int">
+        DELETE 
+          FROM CO_BBS_MGR
+         WHERE BBS_CD = #{bbsCd}
+    </delete>
+    
+</mapper>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_domain">
+
+    <select id="list" resultType="domainBean">
+        SELECT DOMAIN_CD  AS domainCd,
+               DOMAIN_NM  AS domainNm,
+               DOMAIN_URL AS domainUrl
+          FROM CO_DOMAIN
+         ORDER BY DOMAIN_CD ASC
+    </select>
+    
+    <select id="view" resultType="domainBean" parameterType="domainBean">
+        SELECT DOMAIN_CD  AS domainCd,
+               DOMAIN_NM  AS domainNm,
+               DOMAIN_URL AS domainUrl
+          FROM CO_DOMAIN
+         WHERE DOMAIN_CD = #{domainCd}
+    </select>
+    
+    <insert id="insert" parameterType="domainBean">
+        INSERT INTO CO_DOMAIN (
+            DOMAIN_CD,        DOMAIN_NM,         DOMAIN_URL
+        )
+        VALUES (
+            #{domainCd},      #{domainNm},       #{domainUrl}
+        )
+    </insert>
+    
+    <update id="update" parameterType="domainBean">
+        UPDATE CO_DOMAIN 
+           SET
+               DOMAIN_NM  = #{domainNm},
+               DOMAIN_URL = #{domainUrl}
+         WHERE DOMAIN_CD = #{domainCd}
+    </update>
+    
+    <delete id="delete" parameterType="domainBean">
+        DELETE 
+          FROM CO_DOMAIN
+         WHERE DOMAIN_CD = #{domainCd}
+    </delete>
+    
+</mapper>

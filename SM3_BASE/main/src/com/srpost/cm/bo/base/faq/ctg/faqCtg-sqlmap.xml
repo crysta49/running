@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_faqCtg">
+
+    <select id="list" resultType="faqCtgBean" parameterType="faqCtgBean">
+        SELECT A.CTG_CD  AS id,
+               A.CTG_NM  AS text,
+               DECODE(A.USE_YN, 'N', 'no-use') AS cls,
+               DECODE(
+                  (SELECT COUNT(CTG_CD) 
+                     FROM CO_FAQ_CTG 
+                    WHERE HIGH_CTG_CD = A.CTG_CD), 0, 'true', 'false') AS leaf
+          FROM CO_FAQ_CTG A
+         WHERE A.CTG_CD != #{topCtgCd}
+           AND A.HIGH_CTG_CD = #{highCtgCd}
+           <if test="@Ognl@isNotEmpty(useYn)">
+               AND A.USE_YN = #{useYn}
+           </if>
+         ORDER BY A.ORDER_NO ASC
+    </select>
+    
+    <select id="view" resultType="faqCtgBean" parameterType="faqCtgBean">
+        SELECT HIGH_CTG_CD AS highCtgCd,
+               CTG_CD      AS ctgCd,
+               CTG_NM      AS ctgNm,
+               CTG_NM      AS text,
+               ORDER_NO    AS orderNo,
+               USE_YN      AS useYn,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_FAQ_CTG
+         WHERE CTG_CD = #{ctgCd}
+    </select>
+    
+    <insert id="insert" parameterType="faqCtgBean">
+        INSERT INTO CO_FAQ_CTG (
+            CTG_CD,      CTG_NM,      HIGH_CTG_CD,  
+            ORDER_NO
+        )
+        VALUES (
+            #{ctgCd},    #{ctgNm},    #{highCtgCd},  
+            (
+            SELECT NVL(MAX(ORDER_NO), 0) + 1
+              FROM CO_FAQ_CTG
+             WHERE HIGH_CTG_CD = #{highCtgCd}
+            )
+        )
+    </insert>
+        
+    <update id="update" parameterType="faqCtgBean">
+        UPDATE CO_FAQ_CTG 
+           SET 
+               <if test="@Ognl@isNotEmpty(ctgNm)">
+                   CTG_NM = #{ctgNm},
+               </if>
+               <if test="@Ognl@isNotEmpty(useYn)">
+                   USE_YN  = #{useYn},
+               </if>
+               MODI_DT = SYSDATE
+         WHERE CTG_CD = #{ctgCd}
+    </update>
+    
+    <update id="updateRecursive" parameterType="faqCtgBean">
+        UPDATE CO_FAQ_CTG
+           SET USE_YN = #{useYn}
+         WHERE CTG_CD IN ( 
+            SELECT CTG_CD
+              FROM CO_FAQ_CTG
+             START WITH CTG_CD = #{ctgCd}
+            CONNECT BY PRIOR CTG_CD = HIGH_CTG_CD)    
+    </update>
+    
+    <update id="updateOrder" parameterType="faqCtgBean">
+        UPDATE CO_FAQ_CTG 
+           SET ORDER_NO    = #{orderNo},
+               HIGH_CTG_CD = #{highCtgCd}
+         WHERE CTG_CD      = #{ctgCd}
+    </update>
+
+    <select id="listSameLevel" resultType="faqCtgBean" parameterType="faqCtgBean"><![CDATA[
+        SELECT CTG_CD      AS ctgCd,
+               HIGH_CTG_CD AS highCtgCd,
+               ORDER_NO    AS orderNo
+          FROM CO_FAQ_CTG
+         WHERE CTG_CD     != #{topCtgCd}
+           AND CTG_CD     != #{ctgCd}
+           AND HIGH_CTG_CD = #{highCtgCd}
+         ORDER BY ORDER_NO ASC
+    ]]></select>
+    
+    <delete id="delete" parameterType="faqCtgBean">
+        DELETE 
+          FROM CO_FAQ_CTG
+         WHERE CTG_CD = #{ctgCd}
+    </delete>
+    
+    
+    <select id="listAll" resultType="faqCtgBean" parameterType="string">
+        SELECT LPAD('^', (level-1)*4, '^') || CTG_NM AS ctgNm,
+               CTG_CD AS ctgCd
+          FROM CO_FAQ_CTG A
+         WHERE A.USE_YN = 'Y'
+         START WITH A.HIGH_CTG_CD = #{topCtgCd}
+                AND A.USE_YN = 'Y'
+       CONNECT BY PRIOR A.CTG_CD = A.HIGH_CTG_CD
+         ORDER SIBLINGS BY A.ORDER_NO
+    </select>
+    
+</mapper>

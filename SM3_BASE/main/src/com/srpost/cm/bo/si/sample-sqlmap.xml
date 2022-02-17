@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_sample">
+
+    <select id="list" resultType="map" parameterType="map" fetchSize="1000">
+        SELECT ID ,
+               TITLE,
+               FROM_CD,
+               TYPE_CD,
+               DEPT_CD,
+               MGR_ID,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD') AS REG_DT
+          FROM BIG_TABLE
+          <if test="cmd == 3">
+            WHERE ROWNUM &lt;= 100000
+          </if>
+    </select>
+    
+</mapper>

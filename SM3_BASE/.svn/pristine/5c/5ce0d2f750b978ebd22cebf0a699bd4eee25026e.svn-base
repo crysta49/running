@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_menu">
+
+    <select id="list" resultType="menuBean" parameterType="menuBean">
+        SELECT A.MENU_CD  AS id,
+               A.MENU_NM  AS text,
+               DECODE(A.USE_YN, 'N', 'no-use') AS cls,
+               A.MENU_ICON AS iconCls,
+               DECODE(
+                  (SELECT COUNT(MENU_CD) 
+                     FROM CO_MENU 
+                    WHERE HIGH_MENU_CD = A.MENU_CD), 0, 'true', 'false') AS leaf
+          FROM CO_MENU A
+         WHERE A.MENU_CD != #{topMenuCd}
+           AND A.HIGH_MENU_CD = #{highMenuCd}
+         ORDER BY A.ORDER_NO ASC
+    </select>
+    
+    <select id="view" resultType="menuBean" parameterType="menuBean">
+        SELECT HIGH_MENU_CD AS highMenuCd,
+               MENU_CD      AS menuCd,
+               MENU_NM      AS menuNm,
+               MENU_ID      AS menuId,
+               MENU_NM      AS text,
+               ORDER_NO     AS orderNo,
+               MENU_URL     AS menuUrl,
+               MENU_PATTERN AS menuPattern,
+               MENU_ICON    AS menuIcon,
+               DIVIDER_YN   AS dividerYn,
+               USE_YN       AS useYn,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_MENU
+         WHERE MENU_CD = #{menuCd}
+    </select>
+    
+    <insert id="insert" parameterType="menuBean">
+        INSERT INTO CO_MENU (
+            MENU_CD,        MENU_NM,         HIGH_MENU_CD,    MENU_URL,
+            MENU_ID,        MENU_PATTERN,    MENU_ICON,       ORDER_NO,
+            DIVIDER_YN
+        )
+        VALUES (
+            #{menuCd},      #{menuNm},       #{highMenuCd},   #{menuUrl},
+            #{menuId},      #{menuPattern},  #{menuIcon},
+            (
+            SELECT NVL(MAX(ORDER_NO), 0) + 1
+              FROM CO_MENU
+             WHERE HIGH_MENU_CD = #{highMenuCd}
+            ),
+            #{dividerYn}
+        )
+    </insert>
+        
+    <update id="update" parameterType="menuBean">
+        UPDATE CO_MENU 
+           SET
+               MENU_URL = #{menuUrl},
+               <if test="@Ognl@isNotEmpty(menuNm)">
+                   MENU_NM = #{menuNm},
+               </if>
+               <if test="@Ognl@isNotEmpty(menuId)">
+                   MENU_ID = #{menuId},
+               </if>
+               <if test="@Ognl@isNotEmpty(menuPattern)">
+                   MENU_PATTERN = #{menuPattern},
+               </if>
+               <if test="@Ognl@isNotEmpty(menuIcon)">
+                   MENU_ICON = #{menuIcon},
+               </if>
+               <if test="@Ognl@isNotEmpty(dividerYn)">
+                   DIVIDER_YN = #{dividerYn},
+               </if>
+               <if test="@Ognl@isNotEmpty(useYn)">
+                   USE_YN = #{useYn},
+               </if>
+               MODI_DT = SYSDATE
+         WHERE MENU_CD = #{menuCd}
+    </update>
+    
+    <update id="updateRecursive" parameterType="menuBean">
+        UPDATE CO_MENU
+           SET USE_YN = #{useYn}
+         WHERE MENU_CD IN ( 
+            SELECT MENU_CD
+              FROM CO_MENU
+             START WITH MENU_CD = #{menuCd}
+            CONNECT BY PRIOR MENU_CD = HIGH_MENU_CD)    
+    </update>
+    
+    <update id="updateOrder" parameterType="menuBean">
+        UPDATE CO_MENU 
+           SET
+               ORDER_NO     = #{orderNo},
+               HIGH_MENU_CD = #{highMenuCd}
+         WHERE MENU_CD      = #{menuCd}
+    </update>
+
+    <select id="listSameLevel" resultType="menuBean" parameterType="menuBean"><![CDATA[
+        SELECT MENU_CD      AS menuCd,
+               HIGH_MENU_CD AS highMenuCd,
+               ORDER_NO     AS orderNo
+          FROM CO_MENU
+         WHERE MENU_CD      > #{topMenuCd}
+           AND MENU_CD     != #{menuCd}
+           AND HIGH_MENU_CD = #{highMenuCd}
+         ORDER BY ORDER_NO ASC
+    ]]></select> 
+    
+    <delete id="delete" parameterType="menuBean">
+        DELETE 
+          FROM CO_MENU
+         WHERE MENU_CD = #{menuCd}
+    </delete>
+
+    <select id="listAllJSON" resultType="string" parameterType="int"><![CDATA[
+        WITH CONNECT_BY_QUERY AS (
+            SELECT ROWNUM   AS RNUM,
+                   '"id": "' || A.MENU_CD || '", "text": "' || A.MENU_NM || '", "iconCls": "' || A.MENU_ICON || '"' AS FULL_ATTR,
+                   DECODE(
+                      (SELECT COUNT(MENU_CD) 
+                         FROM CO_MENU 
+                        WHERE HIGH_MENU_CD = A.MENU_CD AND USE_YN = 'Y'), 0, 'true', 'false') AS LEAF,
+                   LEVEL    AS LVL
+              FROM CO_MENU A
+             WHERE A.USE_YN = 'Y'
+             START WITH A.HIGH_MENU_CD = #{highMenuCd}
+                    AND A.USE_YN = 'Y'
+           CONNECT BY PRIOR A.MENU_CD = A.HIGH_MENU_CD
+             ORDER SIBLINGS BY A.ORDER_NO
+        )
+        SELECT 
+            CASE 
+                WHEN LVL = 1 AND RNUM = 1 THEN '{'
+                WHEN LVL - LAG(LVL) OVER (ORDER BY RNUM) = 1 THEN ',"children" : [{' 
+                ELSE ', {' 
+            END 
+            || FULL_ATTR || ', "leaf": ' || LEAF || 
+            CASE WHEN LEAD(LVL, 1, 1) OVER (ORDER BY RNUM) - LVL <= 0 THEN
+                      '}' || RPAD( ' ', 1+ (-2 * (LEAD(LVL, 1, 1) OVER (ORDER BY RNUM) - LVL)), ']}' )
+                 ELSE NULL 
+            END AS JSON_SNIPPET
+          FROM CONNECT_BY_QUERY
+         ORDER BY RNUM
+    ]]></select>
+    
+    <select id="listMyAllJSON" resultType="string" parameterType="menuBean"><![CDATA[
+        WITH CONNECT_BY_QUERY AS (
+            SELECT ROWNUM   AS RNUM,
+                   '"id": "' || NVL(A.MENU_ID, A.MENU_CD) || '", "text": "' || A.MENU_NM || 
+                       '", "href": "' || A.MENU_URL || '", "iconCls": "' || A.MENU_ICON ||
+                       '", "menuPattern": "' || A.MENU_PATTERN || 
+                       '", "menuCd": "' || A.MENU_CD || '", "highMenuCd": "' || A.HIGH_MENU_CD || '"' AS FULL_ATTR,
+                   DECODE(
+                      (SELECT COUNT(MENU_CD) 
+                         FROM CO_MENU 
+                        WHERE HIGH_MENU_CD = A.MENU_CD AND USE_YN = 'Y'), 0, 'true', 'false') AS LEAF,
+                   LEVEL    AS LVL
+              FROM CO_MENU A, (
+                        SELECT DISTINCT B.MENU_CD
+                          FROM CO_AUTH_ASSIGN A, CO_AUTH_ITEM B
+                         WHERE A.MGR_ID = #{mgrId}
+                           AND A.AUTH_CD = B.AUTH_CD
+                         ORDER BY B.MENU_CD 
+                   ) B
+             WHERE A.MENU_CD = B.MENU_CD
+               AND A.USE_YN = 'Y'
+             START WITH A.HIGH_MENU_CD = #{highMenuCd}
+                    AND A.USE_YN = 'Y'
+           CONNECT BY PRIOR A.MENU_CD = A.HIGH_MENU_CD
+             ORDER SIBLINGS BY A.ORDER_NO
+        )
+        SELECT 
+            CASE 
+                WHEN LVL = 1 AND RNUM = 1 THEN '{'
+                WHEN LVL - LAG(LVL) OVER (ORDER BY RNUM) = 1 THEN ',"children" : [{' 
+                ELSE ', {' 
+            END 
+            || FULL_ATTR || ', "leaf": ' || LEAF || 
+            CASE WHEN LEAD(LVL, 1, 1) OVER (ORDER BY RNUM) - LVL <= 0 THEN
+                      '}' || RPAD( ' ', 1+ (-2 * (LEAD(LVL, 1, 1) OVER (ORDER BY RNUM) - LVL)), ']}' )
+                 ELSE NULL 
+            END AS JSON_SNIPPET
+          FROM CONNECT_BY_QUERY
+         ORDER BY RNUM
+    ]]></select>
+    
+    
+    
+    <select id="listMyCache" resultType="menuBean" parameterType="menuBean">
+        SELECT A.HIGH_MENU_CD AS highMenuCd,
+               A.MENU_CD      AS menuCd,
+               A.MENU_NM      AS menuNm,
+               A.MENU_ID      AS menuId,
+               A.ORDER_NO     AS orderNo,
+               A.DIVIDER_YN   AS dividerYn,
+               A.MENU_URL     AS menuUrl,
+               A.MENU_PATTERN AS menuPattern,
+               A.MENU_ICON    AS menuIcon,
+               DECODE(
+                  (SELECT COUNT(MENU_CD) 
+                     FROM CO_MENU
+                    WHERE HIGH_MENU_CD = A.MENU_CD), 0, 'true', 'false') AS leaf
+          FROM CO_MENU A, (
+                SELECT DISTINCT B.MENU_CD
+                  FROM CO_AUTH_ASSIGN A, CO_AUTH_ITEM B
+                 WHERE A.MGR_ID      = #{mgrId}
+                   AND A.AUTH_CD = B.AUTH_CD
+                 ORDER BY B.MENU_CD 
+                ) B
+         WHERE A.USE_YN = 'Y'
+           AND A.HIGH_MENU_CD = #{highMenuCd}
+           AND A.MENU_CD      = B.MENU_CD
+         ORDER BY A.ORDER_NO ASC
+    </select>
+    
+    <select id="mapMyCache" resultType="menuBean" parameterType="menuBean">
+        SELECT HIGH_MENU_CD AS highMenuCd,
+               MENU_CD      AS menuCd,
+               MENU_NM      AS menuNm,
+               MENU_ID      AS menuId,
+               ORDER_NO     AS orderNo,
+               DIVIDER_YN   AS dividerYn,
+               MENU_URL     AS menuUrl,
+               MENU_PATTERN AS menuPattern,
+               MENU_ICON    AS menuIcon,
+               LEVEL        AS depth
+          FROM CO_MENU
+         WHERE USE_YN = 'Y'
+         START WITH HIGH_MENU_CD = #{highMenuCd}
+                AND USE_YN = 'Y'
+       CONNECT BY PRIOR MENU_CD = HIGH_MENU_CD
+         ORDER SIBLINGS BY ORDER_NO
+    </select>
+    
+</mapper>

@@ -1,0 +1,12 @@
+[2021-09-27 11:16:28] LoginController.java:143 : LOGIN : manager, 0:0:0:0:0:0:0:1
+[2021-09-27 13:24:23] LoginController.java:143 : LOGIN : manager, 0:0:0:0:0:0:0:1
+[2021-09-27 15:51:45] LoginController.java:143 : LOGIN : manager, 127.0.0.1
+[2021-09-27 16:27:01] LoginController.java:143 : LOGIN : manager, 127.0.0.1
+[2021-09-27 17:07:56] LoginController.java:143 : LOGIN : manager, 0:0:0:0:0:0:0:1
+[2021-09-27 17:08:25] VocUserController.java:52 : USER VIEW : manager, 0:0:0:0:0:0:0:1, 홍길동, USER_1632716277850
+[2021-09-27 17:24:55] LoginController.java:143 : LOGIN : manager, 0:0:0:0:0:0:0:1
+[2021-09-27 17:36:53] LoginController.java:143 : LOGIN : manager, 127.0.0.1
+[2021-09-27 17:51:13] LoginController.java:143 : LOGIN : manager, 127.0.0.1
+[2021-09-27 17:57:07] LoginController.java:143 : LOGIN : manager, 127.0.0.1
+[2021-09-27 17:58:52] VocUserController.java:52 : USER VIEW : manager, 127.0.0.1, 홍길동, USER_1632716277850
+[2021-09-27 17:58:54] VocUserController.java:52 : USER VIEW : manager, 127.0.0.1, 홍길동, USER_1632716277850

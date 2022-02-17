@@ -1,0 +1,33 @@
+이 프로그램은 (주)에스알포스트에서 제작했습니다.
+
+이 프로그램은 GPL 라이선스 하에 배포되는 SW인 ExtJS를 포함하며, 이에 따라 본 프로그램은 GPL 3.0 라이센스를 따릅니다.
+
+아래 나열된 항목은 해당 라이센스를 따릅니다.
+
+-----------------
+라이브러리	
+-----------------
+Springframework - 라이센스는 Apache License를 따릅니다.
+Egovframework - 라이센스는 Apache License를 따릅니다.
+Apache commons - 라이센스는 Apache License를 따릅니다.
+Velocity - 라이센스는 Apache License를 따릅니다.
+POI - 라이센스는 Apache License를 따릅니다.
+Sitemesh, PropertySet, Osworkflow - 라이센스는 OpenSymphony Software License를 따릅니다.
+MyBatis - 라이센스는 Apache License를 따릅니다.
+Jodd - 라이센스는 Simplified BSD License를 따릅니다.
+aopalliance - 라이센스는 LGPL 3.0을 따릅니다.
+Slf4j - 라이센스는 MIT License를 따릅니다.
+LOGBack - 라이센스는 EPL License를 따릅니다.
+
+-----------------
+자바스크립트	
+-----------------
+ExtJS - 라이센스는 GPL 3.0을 따릅니다.
+jQuery - 라이센스는 MIT License를 따릅니다.
+CKEditor - 라이센스는 LGPL 3.0을 따릅니다.
+
+-----------------
+폰트/이미지	
+-----------------
+FusionCharts 1.X - 상용 라이센스를 보유하고 있습니다.
+famfamfam 아이콘 셋 - 무료 배포본 입니다.

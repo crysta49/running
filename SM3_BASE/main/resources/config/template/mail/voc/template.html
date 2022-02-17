@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible"/>
+    <title></title>
+</head>
+
+<body style="background-color: #fff;">
+<div style="width:100%;">
+    <div style="width:686px; margin:0 auto;">
+        <div>
+            <img src="${hostUrl}/resources/common/logo.png" alt="${systemNm}" style="margin-bottom:10px"/>
+        </div>
+        <div style="height:auto;">
+            <ul style="list-style:none;margin:0;padding:0;">
+                <li style="height:31px; background: url(${hostUrl}/resources/base/images/mail/rbox_top.gif) no-repeat;"></li>
+                <li style="border-left:5px solid #eaeaea; border-right:5px solid #eaeaea;">
+
+                    <!-- starat contents -->
+                    <div style="width:600px; margin:0 auto;font-size:12px; font-family:dotum; line-height:16px; line-height:16px;">
+                        <dl style="margin:0; border-bottom:1px solid #eaeaea;">
+                            <dd style="margin:0;padding:0">안녕하세요?</dd>
+                            <dd style="margin:0;padding-top:7px;"><strong>${clientNm}</strong> 입니다.</dd>
+                            <dd style="margin:0;padding:7px 0;"><strong style="color:#0057b3;">${dataBean.regDt}</strong> 에 신청된 상담 건에 대한 알림메일 입니다.</dd>
+                        </dl>
+                        <p/>
+                        #if ( ($!{actionCd} != "OFF_INSERT") && ("$!{dataBean.rcvNo}" != "" ) )
+                        <strong style="color:#0057b3;">${dataBean.vocNm}</strong> (접수번호 : <strong style="color:#0057b3;">${dataBean.rcvNo}</strong>) 의
+                        #end
+                        <strong style="color:#0057b3;">${mgrEmailTitle}</strong>
+                        <p/>
+                        <table style="font-size: 12px; background-color: #fff; width:600px;border-collapse: collapse; border-spacing:0;" border="1" bordercolor="#ccc">
+                            <caption style="text-align:left;font-weight:bold;">신청정보</caption>
+                            <colgroup>
+                                <col style="width:100px"/>
+                                <col style="width:500px;"/>
+                            </colgroup>
+                            <tr>
+                                <th style="text-align:center;background-color:#F5F5F5;">신청인</th>
+                                <td style="padding:5px 5px;">${dataBean.userNm}</td>
+                            </tr>
+                            <tr>
+                                <th style="text-align:center;background-color:#F5F5F5;">제목</th>
+                                <td style="padding:5px 5px;">${dataBean.title}</td>
+                            </tr>
+                            #if ("$!{dataBean.lmtDt}" != "")
+                            <tr>
+                                <th style="text-align:center;background-color:#F5F5F5;">처리기한</th>
+                                <td style="padding:5px 5px;"><span style="color: #C80000; font-weight: bold;">${dataBean.lmtDt}</span></td>
+                            </tr>
+                            #end
+                            <tr>
+                                <th style="text-align:center;background-color:#F5F5F5;">내용</th>
+                                <td style="padding:5px 5px;word-break:break-all;white-space:pre-line;">${dataBean.question}</td>
+                            </tr>
+                            #if ("$!{reason}" != "")
+                            <tr>
+                            	<th style="text-align:center;background-color:#F5F5F5;">사유</th>
+                            	<td style="padding:5px 5px;word-break:break-all;white-space:pre-line;">${reason}</td>
+                            </tr>
+                            #end
+                        </table>
+                        <dl style="margin:0;padding-top:40px;">
+                            <dd style="margin:0;">신청정보외 자세한 내용은 <a href="${hostUrl}/login" target="_blank">관리자 시스템</a>에 접속해서 확인하세요.</dd>
+                        </dl>
+                        <p/>
+                        <dl style="margin:0; border-top:1px solid #eaeaea;">
+                            <dd style="margin:0;padding-top:20px;color:#888;">
+                            본 메일은 발신 전용 메일로 회신 되지 않습니다. 문의사항은 고객센터를 이용해 주세요.
+                            </dd>
+                            <dd style="margin:0;">
+                                ${address}
+                            </dd>
+                        </dl>
+                    </div>
+                    <!-- end contents -->
+                    
+                <li style="margin:0;height:29px; background: url(${hostUrl}/resources/base/images/mail/rbox_btm.gif) no-repeat;"></li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
+    

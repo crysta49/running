@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_faq">
+
+    <sql id="dynamicWhere">
+        <if test="@Ognl@isNotEmpty(ctgCd)">
+            AND (CTG_CD  = #{ctgCd} OR CTG_CD IN (SELECT CTG_CD FROM CO_FAQ_CTG WHERE HIGH_CTG_CD = #{ctgCd}))
+        </if>
+        <if test="@Ognl@isNotEmpty(aprvYn)">
+            AND APRV_YN = #{aprvYn}
+        </if>
+        <if test="@Ognl@isNotEmpty(mgrId)">
+            AND MGR_ID = #{mgrId}
+        </if>
+        <if test="@Ognl@isNotEmpty(searchVal)">
+            <if test="searchKey == 1000">
+                AND TITLE LIKE '%' || #{searchVal} || '%'
+            </if>
+            <if test="searchKey == 2000">
+                AND CONTENTS LIKE '%' || #{searchVal} || '%'
+            </if>
+            <if test="searchKey == 3000">
+                AND MGR_ID IN (SELECT MGR_ID FROM CO_MGR WHERE MGR_NM LIKE '%' || #{searchVal} || '%')
+            </if>
+            <if test="searchKey == 4000">
+                AND ( TITLE LIKE '%' || #{searchVal} || '%'
+                      OR
+                      CONTENTS LIKE '%' || #{searchVal} || '%' )
+            </if>
+        </if>
+        <if test="@Ognl@isNotEmpty(startDt)">
+            AND REG_DT &gt;= TO_DATE(#{startDt}, 'YYYYMMDDHH24MISS')
+        </if>
+        <if test="@Ognl@isNotEmpty(endDt)">
+            AND REG_DT &lt;= TO_DATE(#{endDt}, 'YYYYMMDDHH24MISS')
+        </if>
+    </sql>
+    
+    <sql id="dynamicSort">
+        <if test="@Ognl@isNotEmpty(sortName)">
+            ORDER BY
+            <if test="sortName == 'title'">TITLE ${sortOrder}</if>
+            <if test="sortName == 'regDt'">REG_DT ${sortOrder}</if>
+            <if test="sortName == 'best'">scoreAvg DESC, SEQ DESC</if>
+            <if test="sortName == 'worst'">scoreAvg ASC, SEQ DESC</if>
+        </if>
+    </sql>
+
+    <select id="list" resultType="faqBean" parameterType="map">
+        SELECT Y.* FROM (
+            SELECT ROWNUM NUM, X.* FROM (
+                SELECT /*+ INDEX_DESC(CO_FAQ) */
+                       SEQ       AS seq,
+                       MGR_ID    AS mgrId,
+                       TITLE     AS title,
+                       RECOM_CNT AS recomCnt,
+                       OPP_CNT   AS oppCnt,
+                       READ_CNT  AS readCnt,
+                       ((RECOM_CNT - OPP_CNT)*0.6 + READ_CNT*0.4) AS scoreAvg,
+                       FN_FAQ_CTG_NM(CTG_CD) AS ctgNm,
+                       FN_MGR_NM(MGR_ID) AS mgrNm,
+                       APRV_YN   AS aprvYn,
+                       FN_FILE_CNT(FILE_SEQ) AS fileCnt,
+                       TO_CHAR(REG_DT, 'YYYY-MM-DD') AS regDt,
+                       TO_CHAR(MODI_DT, 'YYYY-MM-DD') AS modiDt
+                  FROM CO_FAQ
+                 WHERE 1 = 1
+                       <include refid="dynamicWhere" />
+                       <include refid="dynamicSort" />
+                ) X
+            WHERE ROWNUM &lt;= #{pagingEndNum}
+         ) Y
+         WHERE NUM &gt;= #{pagingStartNum}
+    </select>
+    
+    <select id="listCount" resultType="int" parameterType="map">
+        SELECT COUNT(SEQ) AS totalCount
+          FROM CO_FAQ
+         WHERE 1 = 1
+               <include refid="dynamicWhere" />
+    </select>
+    
+    <select id="listExcel" resultType="faqBean" parameterType="map">
+        SELECT /*+ INDEX_DESC(CO_FAQ) */
+               SEQ       AS seq,
+               TITLE     AS title,
+               RECOM_CNT AS recomCnt,
+               OPP_CNT   AS oppCnt,
+               READ_CNT  AS readCnt,
+               ((RECOM_CNT - OPP_CNT)*0.6 + READ_CNT*0.4) AS scoreAvg,
+               FN_FAQ_CTG_NM(CTG_CD) AS ctgNm,
+               FN_MGR_NM(MGR_ID) AS mgrNm,
+               APRV_YN   AS aprvYn,
+               FN_FILE_CNT(FILE_SEQ) AS fileCnt,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD') AS modiDt
+          FROM CO_FAQ
+         WHERE 1 = 1
+               <include refid="dynamicWhere" />
+               <include refid="dynamicSort" />
+    </select>
+    
+    <select id="view" resultType="faqBean" parameterType="faqBean">
+        SELECT SEQ       AS seq,
+               CTG_CD    AS ctgCd,
+               TITLE     AS title,
+               CONTENTS  AS contents,
+               RECOM_CNT AS recomCnt,
+               OPP_CNT   AS oppCnt,
+               READ_CNT  AS readCnt,
+               FN_FAQ_CTG_NM(CTG_CD) AS ctgNm,
+               MGR_ID    AS mgrId,
+               FN_MGR_NM(MGR_ID) AS mgrNm,
+               APRV_YN   AS aprvYn,
+               FILE_SEQ  AS fileSeq,
+               FN_FILE_CNT(FILE_SEQ) AS fileCnt,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_FAQ
+         WHERE SEQ = #{seq}
+    </select>
+    
+    <insert id="insert" parameterType="faqBean">
+        INSERT INTO CO_FAQ (
+            SEQ,           CTG_CD,       TITLE,
+            CONTENTS,      MGR_ID,       FILE_SEQ,      APRV_YN
+        )
+        VALUES (
+            #{seq},        #{ctgCd},     #{title},
+            #{contents},   #{mgrId},     #{fileSeq},    #{aprvYn}
+        )
+    </insert>
+        
+    <update id="update" parameterType="faqBean">
+        UPDATE CO_FAQ SET
+               <if test="@Ognl@isNotEmpty(title)">
+                   TITLE = #{title},
+               </if>
+               <if test="@Ognl@isNotEmpty(contents)">
+                   CONTENTS = #{contents},
+               </if>
+               <if test="@Ognl@isNotEmpty(ctgCd)">
+                   CTG_CD = #{ctgCd},
+               </if>
+               <if test="@Ognl@isNotEmpty(aprvYn)">
+                   APRV_YN = #{aprvYn},
+               </if>
+               <if test="@Ognl@isNotEmpty(fileSeq) and fileSeq != -1">
+                   FILE_SEQ = #{fileSeq},
+               </if>
+               MODI_DT = SYSDATE
+         WHERE SEQ = #{seq}
+    </update>
+    
+    <delete id="delete" parameterType="faqBean">
+        DELETE 
+          FROM CO_FAQ
+         WHERE 1 = 1
+             <if test="@Ognl@isNotEmpty(seqs)">
+                 AND SEQ IN 
+                 <foreach collection="seqs" index="index" open="(" close=")" separator=", " item="entry">
+                     #{entry}
+                 </foreach>
+             </if>
+    </delete>
+    
+    <select id="listFileSeq" resultType="int" parameterType="faqBean">
+        SELECT FILE_SEQ
+          FROM CO_FAQ
+         WHERE SEQ = #{seq}
+             <if test="@Ognl@isNotEmpty(seqs)">
+                 AND SEQ IN 
+                 <foreach collection="seqs" index="index" open="(" close=")" separator=", " item="entry">
+                     #{entry}
+                 </foreach>
+             </if>
+    </select>
+
+    <update id="updateAprvYn" parameterType="faqBean">
+        UPDATE CO_FAQ
+           SET APRV_YN = #{aprvYn}
+         WHERE SEQ = #{seq}
+    </update>
+
+    <update id="updateReadCnt" parameterType="faqBean">
+        UPDATE CO_FAQ
+           SET READ_CNT = READ_CNT + 1
+         WHERE SEQ = #{seq}
+    </update>
+
+    <update id="updateRecomCnt" parameterType="int">
+        UPDATE CO_FAQ 
+           SET RECOM_CNT = RECOM_CNT + 1
+         WHERE SEQ = #{seq}
+    </update>
+    
+    <update id="updateOppCnt" parameterType="int">
+        UPDATE CO_FAQ 
+           SET OPP_CNT = OPP_CNT + 1
+         WHERE SEQ = #{seq}
+    </update>
+    
+</mapper>

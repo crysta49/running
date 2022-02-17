@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_bbs">
+
+    <sql id="dynamicWhere">
+        <if test="@Ognl@isNotEmpty(ctgCd)">
+            AND CTG_CD  = #{ctgCd}
+        </if>
+        <if test="@Ognl@isNotEmpty(openYn)">
+            AND OPEN_YN = #{openYn}
+        </if>
+        <if test="@Ognl@isNotEmpty(delYn)">
+            AND DEL_YN = #{delYn}
+        </if>
+        <if test="@Ognl@isNotEmpty(statusCd)">
+            AND STATUS_CD = #{statusCd}
+        </if>
+        <if test="@Ognl@isNotEmpty(searchVal)">
+            <if test="searchKey == 1000">
+                AND TITLE LIKE '%' || #{searchVal} || '%'
+            </if>
+            <if test="searchKey == 2000">
+                AND QUESTION LIKE '%' || #{searchVal} || '%'
+            </if>
+            <if test="searchKey == 3000">
+                AND REPLY LIKE '%' || #{searchVal} || '%'
+            </if>
+            <if test="searchKey == 4000">
+                AND WRITER_NM LIKE '%' || #{searchVal} || '%'
+            </if>
+        </if>
+        <if test="@Ognl@isNotEmpty(startDt)">
+            AND REG_DT &gt;= TO_DATE(#{startDt}, 'YYYYMMDDHH24MISS')
+        </if>
+        <if test="@Ognl@isNotEmpty(endDt)">
+            AND REG_DT &lt;= TO_DATE(#{endDt}, 'YYYYMMDDHH24MISS')
+        </if>
+    </sql>
+    
+    <sql id="dynamicSort">
+        <if test="@Ognl@isNotEmpty(sortName)">
+            ORDER BY
+            <if test="sortName == 'title'">TITLE</if>
+            <if test="sortName == 'regDt'">REG_DT</if>
+            ${sortOrder}
+        </if>
+    </sql>
+
+    <select id="list" resultType="bbsBean" parameterType="map">
+        SELECT Y.* FROM (
+            SELECT ROWNUM NUM, X.* FROM (
+                SELECT /*+ INDEX(CO_BBS IDX_BBS_MAIN) */ 
+                       BBS_CD      AS bbsCd,
+                       BBS_SEQ     AS bbsSeq,
+                       ORDER_NO    AS orderNo,
+                       DEPTH       AS depth,
+                       TITLE       AS title,
+                       WRITER_NM   AS writerNm,
+                       REPLY_NM    AS replyNm,
+                       READ_CNT    AS readCnt,
+                       OPEN_YN     AS openYn,
+                       DEL_YN      AS delYn,
+                       FILE_SEQ    AS fileSeq,
+                       FN_PRV_NM(STATUS_CD, 'BBS_STATUS') AS statusNm,
+                       FN_BBS_CTG_NM(BBS_CD, CTG_CD) AS ctgNm,
+                       FN_BBS_CMT_CNT(BBS_CD, BBS_SEQ) AS commentCnt,
+                       FN_FILE_CNT(FILE_SEQ) AS fileCnt,
+                       TO_CHAR(REG_DT, 'YYYY-MM-DD') AS regDt,
+                       TO_CHAR(MODI_DT, 'YYYY-MM-DD') AS modiDt
+                  FROM CO_BBS
+                 WHERE BBS_CD = #{bbsCd}
+                       <include refid="dynamicWhere" />
+                       <include refid="dynamicSort" />
+                ) X
+            WHERE ROWNUM &lt;= #{pagingEndNum}
+         ) Y
+         WHERE NUM &gt;= #{pagingStartNum}
+    </select>
+    
+    <select id="listCount" resultType="int" parameterType="map">
+        SELECT COUNT(BBS_SEQ) AS totalCount
+          FROM CO_BBS
+         WHERE BBS_CD = #{bbsCd}
+               <include refid="dynamicWhere" />
+    </select>
+    
+    <select id="listExcel" resultType="bbsBean" parameterType="map">
+        SELECT /*+ INDEX(CO_BBS IDX_BBS_MAIN) */ 
+               BBS_CD      AS bbsCd,
+               BBS_SEQ     AS bbsSeq,
+               TITLE       AS title,
+               WRITER_NM   AS writerNm,
+               REPLY_NM    AS replyNm,
+               READ_CNT    AS readCnt,
+               OPEN_YN     AS openYn,
+               DEL_YN      AS delYn,
+               FN_PRV_NM(STATUS_CD, 'BBS_STATUS') AS statusNm,
+               FN_BBS_CTG_NM(BBS_CD, CTG_CD) AS ctgNm,
+               FN_BBS_CMT_CNT(BBS_CD, BBS_SEQ) AS commentCnt,
+               FN_FILE_CNT(FILE_SEQ) AS fileCnt,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD') AS modiDt
+          FROM CO_BBS
+         WHERE BBS_CD = #{bbsCd}
+               <include refid="dynamicWhere" />
+               <include refid="dynamicSort" />
+    </select>
+    
+    <select id="view" resultType="bbsBean" parameterType="bbsBean">
+        SELECT BBS_CD      AS bbsCd,
+               BBS_SEQ     AS bbsSeq,
+               REF_SEQ     AS refSeq,
+               ORDER_NO    AS orderNo,
+               DEPTH       AS depth,
+               CTG_CD      AS ctgCd,
+               TITLE       AS title,
+               WRITER_NM   AS writerNm,
+               WRITER_ENC_PWD AS writerEncPwd,
+               REPLY_NM    AS replyNm,
+               MGR_ID      AS mgrId,
+               USER_KEY    AS userKey,
+               QUESTION    AS question,
+               REPLY       AS reply,
+               ALERT_CDS   AS alertCds,
+               STATUS_CD   AS statusCd,
+               FILE_SEQ    AS fileSeq,
+               READ_CNT    AS readCnt,
+               HTML_YN     AS htmlYn,
+               OPEN_YN     AS openYn,
+               DEL_YN      AS delYn,
+               FN_PRV_NM(STATUS_CD, 'BBS_STATUS') AS statusNm,
+               FN_BBS_CTG_NM(BBS_CD, CTG_CD) AS ctgNm,
+               FN_BBS_CMT_CNT(BBS_CD, BBS_SEQ) AS commentCnt,
+               FN_FILE_CNT(FILE_SEQ) AS fileCnt,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_BBS
+         WHERE BBS_CD  = #{bbsCd}
+           AND BBS_SEQ = #{bbsSeq}
+    </select>
+    
+    <select id="prevNext" resultType="com.srpost.salmon.bean.BasePrevNextBean" parameterType="map">
+        SELECT * FROM (
+            SELECT BBS_SEQ,
+                   LEAD(BBS_SEQ, 1) OVER (ORDER BY BBS_CD, REF_SEQ, ORDER_NO) AS nextKey,
+                   LEAD(TITLE, 1) OVER (ORDER BY BBS_CD, REF_SEQ, ORDER_NO) AS nextTitle,
+                   LAG (BBS_SEQ, 1) OVER (ORDER BY BBS_CD, REF_SEQ, ORDER_NO) AS prevKey,
+                   LAG (TITLE, 1) OVER (ORDER BY BBS_CD, REF_SEQ, ORDER_NO) AS prevTitle
+              FROM CO_BBS
+             WHERE BBS_CD = #{bbsCd}
+               <include refid="dynamicWhere" />
+             ) A
+         WHERE BBS_SEQ = #{bbsSeq}
+    </select>
+    
+    <insert id="insert" parameterType="bbsBean">
+        INSERT INTO CO_BBS (
+            BBS_CD,       BBS_SEQ,      REF_SEQ,        ORDER_NO,         DEPTH,
+            CTG_CD,       TITLE,        WRITER_NM,      WRITER_ENC_PWD,   REPLY_NM,
+            MGR_ID,       USER_KEY,     QUESTION,       REPLY,            FILE_SEQ,
+            HTML_YN,      OPEN_YN,      STATUS_CD,      ALERT_CDS
+        )
+        VALUES (
+            #{bbsCd},     #{bbsSeq},    #{refSeq},      #{orderNo},       #{depth},
+            #{ctgCd},     #{title},     #{writerNm},    #{writerEncPwd},  #{replyNm},
+            #{mgrId},     #{userKey},   #{question},    #{reply},         #{fileSeq},
+            #{htmlYn},    #{openYn},    #{statusCd},    #{alertCds}
+        )
+    </insert>
+        
+    <update id="update" parameterType="bbsBean">
+        UPDATE CO_BBS SET
+               CTG_CD = #{ctgCd},
+               <if test="@Ognl@isNotEmpty(title)">
+                   TITLE = #{title},
+               </if>
+               <if test="@Ognl@isNotEmpty(question)">
+                   QUESTION = #{question},
+               </if>
+               <if test="@Ognl@isNotEmpty(reply)">
+                   REPLY = #{reply},
+               </if>
+               <if test="@Ognl@isNotEmpty(fileSeq) and fileSeq != -1">
+                   FILE_SEQ = #{fileSeq},
+               </if>
+               <if test="@Ognl@isNotEmpty(writerEncPwd)">
+                   WRITER_ENC_PWD = #{writerEncPwd},
+               </if>
+               <if test="@Ognl@isNotEmpty(alertCds)">
+                   ALERT_CDS = #{alertCds},
+               </if>
+               <if test="@Ognl@isNotEmpty(replyNm)">
+                   REPLY_NM = #{replyNm},
+               </if>
+               <if test="@Ognl@isNotEmpty(mgrId)">
+                   MGR_ID = #{mgrId},
+               </if>
+               <!-- 
+               <if test="@Ognl@isNotEmpty(userKey)">
+                   USER_KEY = #{userKey},
+               </if> -->
+               <if test="@Ognl@isNotEmpty(statusCd)">
+                   STATUS_CD = #{statusCd},
+               </if>
+               <if test="@Ognl@isNotEmpty(openYn)">
+                   OPEN_YN = #{openYn},
+               </if>
+               <if test="@Ognl@isNotEmpty(delYn)">
+                   DEL_YN = #{delYn},
+               </if>
+               MODI_DT = SYSDATE
+         WHERE BBS_CD  = #{bbsCd}
+           AND BBS_SEQ = #{bbsSeq}
+    </update>
+    
+    <delete id="delete" parameterType="bbsBean">
+        DELETE 
+          FROM CO_BBS
+         WHERE BBS_CD  = #{bbsCd}
+             <if test="@Ognl@isNotEmpty(bbsSeqs)">
+                 AND BBS_SEQ IN 
+                 <foreach collection="bbsSeqs" index="index" open="(" close=")" separator=", " item="entry">
+                     #{entry}
+                 </foreach>
+             </if>
+    </delete>
+    
+    <select id="listFileSeq" resultType="int" parameterType="bbsBean">
+        SELECT FILE_SEQ
+          FROM CO_BBS
+         WHERE BBS_CD  = #{bbsCd}
+             <if test="@Ognl@isNotEmpty(bbsSeqs)">
+                 AND BBS_SEQ IN 
+                 <foreach collection="bbsSeqs" index="index" open="(" close=")" separator=", " item="entry">
+                     #{entry}
+                 </foreach>
+             </if>
+    </select>
+    
+    <delete id="deleteOne" parameterType="bbsBean">
+        DELETE 
+          FROM CO_BBS
+         WHERE BBS_CD  = #{bbsCd}
+           AND BBS_SEQ = #{bbsSeq}
+    </delete>
+    
+    <update id="updateForDelete" parameterType="bbsBean">
+        UPDATE CO_BBS 
+           SET DEL_YN = 'Y',
+               TITLE = '_DELETE_',
+               QUESTION = '_DELETE_',
+               REPLY = '_DELETE_',
+               FILE_SEQ = -1
+         WHERE BBS_CD  = #{bbsCd}
+           AND BBS_SEQ = #{bbsSeq}
+    </update>
+    
+    <select id="childCount" resultType="int" parameterType="bbsBean">
+        SELECT COUNT(BBS_SEQ)
+          FROM CO_BBS
+         WHERE BBS_CD = #{bbsCd}
+           AND REF_SEQ = #{refSeq}
+           AND ORDER_NO = #{orderNo}
+           AND DEPTH = #{depth}
+    </select>
+
+    <update id="updateReadCnt" parameterType="bbsBean">
+        UPDATE CO_BBS
+           SET READ_CNT = READ_CNT + 1
+         WHERE BBS_CD  = #{bbsCd}
+           AND BBS_SEQ = #{bbsSeq}
+    </update>
+    
+    
+    <!-- Hierarchical BBS -->
+     
+    <select id="viewMinRefSeq" resultType="int" parameterType="bbsBean">
+        SELECT NVL(MIN(REF_SEQ), 0)-1
+          FROM CO_BBS
+         WHERE BBS_CD = #{bbsCd}
+    </select>
+
+    <select id="viewParent" resultType="bbsBean" parameterType="bbsBean">
+        SELECT REF_SEQ   AS refSeq, 
+               DEPTH     AS depth, 
+               ORDER_NO  AS orderNo
+          FROM CO_BBS
+         WHERE BBS_CD  = #{bbsCd}
+           AND BBS_SEQ = #{bbsSeq}
+    </select>
+    
+    <select id="relativeList" resultType="bbsBean" parameterType="bbsBean">
+        SELECT REF_SEQ   AS refSeq, 
+               DEPTH     AS depth, 
+               ORDER_NO  AS orderNo
+          FROM CO_BBS
+         WHERE BBS_CD   = #{bbsCd}
+           AND REF_SEQ  = #{refSeq}
+           AND ORDER_NO &gt;= #{orderNo}
+         ORDER BY ORDER_NO ASC
+    </select>
+    
+    <update id="updateRelativeList">
+        UPDATE CO_BBS
+           SET ORDER_NO = ORDER_NO + 1
+         WHERE BBS_CD   = #{bbsCd}
+           AND REF_SEQ  = #{refSeq}
+           AND ORDER_NO &gt;= #{orderNo}
+    </update>
+    
+    <update id="updateReply" parameterType="bbsBean">
+        UPDATE CO_BBS SET
+               <if test="@Ognl@isNotEmpty(replyNm)">
+                   REPLY_NM = #{replyNm},
+               </if>
+               <if test="@Ognl@isNotEmpty(reply)">
+                   REPLY = #{reply},
+               </if>
+               <if test="@Ognl@isNotEmpty(mgrId)">
+                   MGR_ID = #{mgrId},
+               </if>
+               <if test="@Ognl@isNotEmpty(statusCd)">
+                   STATUS_CD = #{statusCd},
+               </if>
+               MODI_DT = SYSDATE
+         WHERE BBS_CD  = #{bbsCd}
+           AND BBS_SEQ = #{bbsSeq}
+    </update>
+    
+</mapper>

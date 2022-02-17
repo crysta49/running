@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+    
+    <!-- <system/>
+    
+    <header>
+    </header> -->
+
+    <override> 
+        <!-- 
+        <properties fileName="config.prop" throwExceptionOnMissing="true"
+            config-name="properties" config-optional="true">
+            <reloadingStrategy refreshDelay="10000"
+                config-class="org.apache.commons.configuration.reloading.FileChangedReloadingStrategy"/>
+        </properties>
+        
+        <properties fileName="database.prop" /> -->
+        
+        <xml fileName="core-config.xml" encoding="UTF-8" />
+        
+    </override>
+
+    <additional>
+    </additional>
+    
+</configuration>

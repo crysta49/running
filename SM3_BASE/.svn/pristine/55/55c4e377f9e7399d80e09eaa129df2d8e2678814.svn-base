@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_cache"> 
+    
+    <select id="list" resultType="cacheBean" parameterType="string">
+        SELECT SEQ      AS seq,
+               IP_ADDR  AS ipAddr,
+               CLASS_NM AS classNm
+          FROM CO_CACHE_RELOAD_LOG
+         WHERE IP_ADDR = #{ipAddr}
+           AND RELOAD_DT IS NULL
+    </select>
+    
+    <update id="update" parameterType="int">
+        UPDATE CO_CACHE_RELOAD_LOG
+           SET RELOAD_DT = SYSDATE
+         WHERE SEQ = #{seq}
+    </update>
+    
+    <insert id="insert" parameterType="cacheBean">
+        INSERT INTO CO_CACHE_RELOAD_LOG (
+            SEQ,        
+            IP_ADDR,        CLASS_NM,
+            RELOAD_DT
+        )
+        VALUES (
+            (SELECT NVL(MAX(SEQ), 0) + 1
+               FROM CO_CACHE_RELOAD_LOG),
+            #{ipAddr},       #{classNm},
+            <choose>
+                <when test="@Ognl@isNotEmpty(reloadDt)">SYSDATE</when>
+                <otherwise>#{reloadDt}</otherwise>
+            </choose>
+        )
+    </insert>
+    
+</mapper>

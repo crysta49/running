@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_menuFront">
+
+    <select id="list" resultType="menuFrontBean" parameterType="menuFrontBean">
+        SELECT A.MENU_CD  AS id,
+               A.MENU_NM  AS text,
+               DECODE(A.USE_YN, 'N', 'no-use') AS cls,
+               A.MENU_ICON AS iconCls,
+               DECODE(
+                  (SELECT COUNT(MENU_CD) 
+                     FROM CO_MENU_FRONT 
+                    WHERE HIGH_MENU_CD = A.MENU_CD), 0, 'true', 'false') AS leaf
+          FROM CO_MENU_FRONT A
+         WHERE A.MENU_CD != #{topMenuCd}
+           AND A.HIGH_MENU_CD = #{highMenuCd}
+           AND A.DOMAIN_CD = #{domainCd}
+         ORDER BY A.ORDER_NO ASC
+    </select>
+    
+    <select id="view" resultType="menuFrontBean" parameterType="menuFrontBean">
+        SELECT HIGH_MENU_CD AS highMenuCd,
+               MENU_CD      AS menuCd,
+               MENU_NM      AS menuNm,
+               DOMAIN_CD    AS domainCd,
+               MGR_ID       AS mgrId,
+               FN_MGR_NM(MGR_ID) AS mgrNm,
+               MENU_ID      AS menuId,
+               MENU_NM      AS text,
+               ORDER_NO     AS orderNo,
+               MENU_URL     AS menuUrl,
+               MENU_PATTERN AS menuPattern,
+               MENU_ICON    AS menuIcon,
+               SHOW_YN      AS showYn,
+               TYPE_CD      AS typeCd,
+               USE_YN       AS useYn,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_MENU_FRONT
+         WHERE MENU_CD = #{menuCd}
+    </select>
+    
+    <insert id="insert" parameterType="menuFrontBean">
+        INSERT INTO CO_MENU_FRONT (
+            MENU_CD,        MENU_NM,         HIGH_MENU_CD,    MENU_URL,
+            MENU_ID,        MENU_PATTERN,    MENU_ICON,       ORDER_NO,
+            SHOW_YN,        TYPE_CD,         DOMAIN_CD,       MGR_ID
+        )
+        VALUES (
+            #{menuCd},      #{menuNm},       #{highMenuCd},   #{menuUrl},
+            #{menuId},      #{menuPattern},  #{menuIcon},
+            (
+            SELECT NVL(MAX(ORDER_NO), 0) + 1
+              FROM CO_MENU_FRONT
+             WHERE HIGH_MENU_CD = #{highMenuCd}
+            ),
+            #{showYn},      #{typeCd},       #{domainCd},     #{mgrId}
+        )
+    </insert>
+        
+    <update id="update" parameterType="menuFrontBean">
+        UPDATE CO_MENU_FRONT 
+           SET
+               MENU_URL = #{menuUrl},
+               <if test="@Ognl@isNotEmpty(menuNm)">
+                   MENU_NM = #{menuNm},
+               </if>
+               <if test="@Ognl@isNotEmpty(menuId)">
+                   MENU_ID = #{menuId},
+               </if>
+               <if test="@Ognl@isNotEmpty(menuPattern)">
+                   MENU_PATTERN = #{menuPattern},
+               </if>
+               <if test="@Ognl@isNotEmpty(menuIcon)">
+                   MENU_ICON = #{menuIcon},
+               </if>
+               <if test="@Ognl@isNotEmpty(showYn)">
+                   SHOW_YN = #{showYn},
+               </if>
+               <if test="@Ognl@isNotEmpty(typeCd)">
+                   TYPE_CD = #{typeCd},
+               </if>
+               <if test="@Ognl@isNotEmpty(useYn)">
+                   USE_YN = #{useYn},
+               </if>
+               <if test="@Ognl@isNotEmpty(mgrId)">
+                   MGR_ID = #{mgrId},
+               </if>
+               MODI_DT = SYSDATE
+         WHERE MENU_CD = #{menuCd}
+    </update>
+    
+    <update id="updateRecursive" parameterType="menuFrontBean">
+        UPDATE CO_MENU_FRONT
+           SET USE_YN = #{useYn}
+         WHERE MENU_CD IN ( 
+            SELECT MENU_CD
+              FROM CO_MENU_FRONT
+             START WITH MENU_CD = #{menuCd}
+            CONNECT BY PRIOR MENU_CD = HIGH_MENU_CD)    
+    </update>
+    
+    <update id="updateOrder" parameterType="menuFrontBean">
+        UPDATE CO_MENU_FRONT 
+           SET
+               ORDER_NO     = #{orderNo},
+               HIGH_MENU_CD = #{highMenuCd}
+         WHERE MENU_CD      = #{menuCd}
+    </update>
+
+    <select id="listSameLevel" resultType="menuFrontBean" parameterType="menuFrontBean"><![CDATA[
+        SELECT MENU_CD      AS menuCd,
+               HIGH_MENU_CD AS highMenuCd,
+               ORDER_NO     AS orderNo
+          FROM CO_MENU_FRONT
+         WHERE MENU_CD      > #{topMenuCd}
+           AND MENU_CD     != #{menuCd}
+           AND HIGH_MENU_CD = #{highMenuCd}
+         ORDER BY ORDER_NO ASC
+    ]]></select> 
+    
+    <delete id="delete" parameterType="menuFrontBean">
+        DELETE 
+          FROM CO_MENU_FRONT
+         WHERE MENU_CD = #{menuCd}
+    </delete>
+
+
+    <select id="listCache" resultType="menuFrontBean" parameterType="menuFrontBean">
+        SELECT A.HIGH_MENU_CD AS highMenuCd,
+               A.MENU_CD      AS menuCd,
+               A.MENU_NM      AS menuNm,
+               A.DOMAIN_CD    AS domainCd,
+               A.MGR_ID       AS mgrId,
+               A.MENU_ID      AS menuId,
+               A.ORDER_NO     AS orderNo,
+               A.MENU_URL     AS menuUrl,
+               A.MENU_PATTERN AS menuPattern,
+               A.MENU_ICON    AS menuIcon,
+               A.SHOW_YN      AS showYn,
+               A.TYPE_CD      AS typeCd,
+               DECODE(
+                  (SELECT COUNT(MENU_CD) 
+                     FROM CO_MENU_FRONT 
+                    WHERE HIGH_MENU_CD = A.MENU_CD), 0, 'true', 'false') AS leaf
+          FROM CO_MENU_FRONT A
+         WHERE A.USE_YN = 'Y'
+           AND A.HIGH_MENU_CD = #{highMenuCd}
+           AND A.DOMAIN_CD = #{domainCd}
+         ORDER BY A.ORDER_NO ASC
+    </select>
+    
+    <select id="mapAllCache" resultType="menuFrontBean" parameterType="int">
+        SELECT HIGH_MENU_CD AS highMenuCd,
+               MENU_CD      AS menuCd,
+               MENU_NM      AS menuNm,
+               DOMAIN_CD    AS domainCd,
+               MGR_ID       AS mgrId,
+               MENU_ID      AS menuId,
+               ORDER_NO     AS orderNo,
+               MENU_URL     AS menuUrl,
+               MENU_PATTERN AS menuPattern,
+               MENU_ICON    AS menuIcon,
+               SHOW_YN      AS showYn,
+               TYPE_CD      AS typeCd,
+               LEVEL        AS depth
+          FROM CO_MENU_FRONT
+         WHERE USE_YN = 'Y'
+         START WITH HIGH_MENU_CD = #{topMenuCd}
+                AND USE_YN = 'Y'
+       CONNECT BY PRIOR MENU_CD = HIGH_MENU_CD
+         ORDER SIBLINGS BY ORDER_NO
+    </select>
+             
+</mapper>

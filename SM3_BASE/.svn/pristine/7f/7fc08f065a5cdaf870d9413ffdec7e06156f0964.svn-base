@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+       xmlns:p="http://www.springframework.org/schema/p" 
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans-3.2.xsd">
+    
+    <bean id="cacheManager" class="com.srpost.salmon.cache.CacheManager" depends-on="commonConfigInitializer">
+        <property name="cacheList">
+            <list>
+                <bean class="com.srpost.cm.bo.base.code.CodeCache" />
+                <bean class="com.srpost.cm.bo.base.bbs.conf.BbsConfCache" />
+                <bean class="com.srpost.cm.bo.base.menu.front.MenuFrontCache" />
+                <bean class="com.srpost.cm.bo.base.hday.HdayCache" />
+            </list>
+        </property>
+        <!-- 
+        <property name="serverList">
+            <list>
+                <value>192.168.1.7</value>
+                <value>192.168.1.8</value>
+            </list>
+        </property> -->
+    </bean>
+    
+</beans>

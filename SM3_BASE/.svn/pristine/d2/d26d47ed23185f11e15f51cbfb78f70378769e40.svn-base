@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_code">
+
+    <!-- 그룹코드 -->
+    
+    <select id="listGrp" resultType="codeBean" parameterType="codeBean">
+        SELECT GRP_CD   AS grpCd,
+               GRP_NM   AS grpNm
+          FROM CO_CODE_GRP
+         ORDER BY GRP_CD ASC 
+    </select>
+    
+    <select id="viewGrp" resultType="codeBean" parameterType="codeBean">
+        SELECT GRP_CD   AS grpCd,
+               GRP_NM   AS grpNm
+          FROM CO_CODE_GRP
+         WHERE GRP_CD = #{grpCd}
+    </select>
+    
+    <insert id="insertGrp" parameterType="codeBean">
+        INSERT INTO CO_CODE_GRP (
+            GRP_CD,     GRP_NM
+        )
+        VALUES (
+            #{grpCd},   #{grpNm}
+        )
+    </insert>
+    
+    <update id="updateGrp" parameterType="codeBean">
+        UPDATE CO_CODE_GRP 
+           SET GRP_NM = #{grpNm}
+         WHERE GRP_CD = #{grpCd}
+    </update>
+    
+    <delete id="deleteGrp" parameterType="codeBean">
+        DELETE 
+          FROM CO_CODE_GRP
+         WHERE GRP_CD = #{grpCd}
+    </delete>
+    
+    
+    <!-- 개별코드 -->
+    
+    <select id="listPrv" resultType="codeBean" parameterType="codeBean">
+        SELECT GRP_CD     AS grpCd,
+               PRV_CD     AS prvCd,
+               PRV_NM     AS prvNm,
+               ORDER_NO   AS orderNo,
+               SUB_GRP_CD AS subGrpCd,
+               USE_YN     AS useYn,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_CODE_PRV
+         WHERE GRP_CD = #{grpCd}
+            <if test="@Ognl@isNotEmpty(useYn)">
+                AND USE_YN = #{useYn}
+            </if>
+         ORDER BY ORDER_NO ASC 
+    </select>
+    
+    <select id="viewPrv" resultType="codeBean" parameterType="codeBean">
+        SELECT PRV_CD     AS prvCd,
+               PRV_NM     AS prvNm,
+               ORDER_NO   AS orderNo,
+               SUB_GRP_CD AS subGrpCd,
+               USE_YN     AS useYn,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_CODE_PRV
+         WHERE GRP_CD = #{grpCd}
+           AND PRV_CD = #{prvCd}
+    </select>
+
+    <insert id="insertPrv" parameterType="codeBean">
+        INSERT INTO CO_CODE_PRV (
+            GRP_CD,     PRV_CD,     PRV_NM,     ORDER_NO,     SUB_GRP_CD
+        )
+        VALUES (
+            #{grpCd},   #{prvCd},   #{prvNm},   #{orderNo},   #{subGrpCd}
+        )
+    </insert>
+    
+    <update id="updatePrv" parameterType="codeBean">
+        UPDATE CO_CODE_PRV 
+           SET 
+               <if test="@Ognl@isNotEmpty(prvNm)">
+                   PRV_NM  = #{prvNm},
+               </if>
+               <if test="@Ognl@isNotEmpty(orderNo)">
+                   ORDER_NO = #{orderNo},
+               </if>
+               <if test="@Ognl@isNotEmpty(useYn)">
+                   USE_YN  = #{useYn},
+               </if>
+               SUB_GRP_CD = #{subGrpCd},
+               MODI_DT = SYSDATE
+         WHERE GRP_CD  = #{grpCd}
+           AND PRV_CD  = #{prvCd}
+    </update>
+    
+    <update id="updateOrderPrv" parameterType="codeBean">
+        UPDATE CO_CODE_PRV 
+           SET ORDER_NO = #{orderNo}
+         WHERE GRP_CD   = #{grpCd}
+           AND PRV_CD   = #{prvCd}
+    </update>
+
+    <delete id="deletePrv" parameterType="codeBean">
+        DELETE 
+          FROM CO_CODE_PRV
+         WHERE GRP_CD = #{grpCd}
+           AND PRV_CD = #{prvCd}
+    </delete>
+     
+</mapper>

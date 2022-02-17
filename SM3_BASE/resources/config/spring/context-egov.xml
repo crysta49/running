@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+       xmlns:p="http://www.springframework.org/schema/p" 
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+                     
+    <!-- 공통 Encryption / Decryption -->
+    <bean
+        id="salmonCrypto"
+        class="com.srpost.salmon.spi.crypto.SalmonCrypto"
+        p:digestService-ref="digestService"
+        p:cryptoService-ref="generalCryptoService" />
+    
+    <!-- SHA-256 기반 메시지 Digest -->
+    <bean 
+        id="digestService"
+        class="egovframework.rte.fdl.cryptography.impl.EgovDigestServiceImpl">
+        <property name="algorithm" value="SHA-256" />
+        <property name="plainDigest" value="false" />
+    </bean>
+    
+    <!-- 국정원 ARIA 블록암호 알고리즘, 암호화 대상 문자열이 10보다 작을 경우 암복화값이 맞지 않는 오류 있음 -->
+    <bean 
+        id="ariaCryptoService"
+        class="egovframework.rte.fdl.cryptography.impl.EgovARIACryptoServiceImpl">
+        <property name="passwordEncoder" ref="passwordEncoder" />
+        <property name="blockSize" value="1024" />
+    </bean>
+    
+    <!-- JASYPT 기반 블록암호 알고리즘 -->
+    <bean 
+        id="generalCryptoService"
+        class="egovframework.rte.fdl.cryptography.impl.EgovGeneralCryptoServiceImpl">
+        <property name="passwordEncoder" ref="passwordEncoder" />
+        <property name="algorithm" value="PBEWithSHA1AndDESede" />
+        <property name="blockSize" value="1024" />
+    </bean>
+
+    <bean 
+        id="passwordEncoder"
+        class="egovframework.rte.fdl.cryptography.EgovPasswordEncoder"
+        p:algorithm="SHA-256"
+        p:hashedPassword="afWEN9RkCVyzI1KpQQsCE54Y0OsFm17DUqjwIP1uzmE=" />
+            
+        
+    <!-- For EgovAbstractServiceImpl을 위한 설정 -->
+    <!-- http://www.egovframe.go.kr/wiki/doku.php?id=egovframework:rte:bsl:exception_handling -->
+    
+    <bean id="leaveaTrace" class="egovframework.rte.fdl.cmmn.trace.LeaveaTrace">
+        <property name="traceHandlerServices">
+            <list>
+                <ref bean="traceHandlerService" />
+            </list>
+        </property>
+    </bean>
+ 
+    <bean id="traceHandlerService" class="egovframework.rte.fdl.cmmn.trace.manager.DefaultTraceHandleManager">
+        <property name="patterns">
+            <list>
+                <value>*</value>
+            </list>
+        </property>
+        <property name="handlers">
+            <list>
+                <ref bean="defaultTraceHandler" />
+            </list>
+        </property>
+    </bean>
+ 
+    <bean id="defaultTraceHandler"
+        class="egovframework.rte.fdl.cmmn.trace.handler.DefaultTraceHandler" />
+    
+</beans>

@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_bbsNtc">
+
+    <sql id="dynamicWhere">
+        <if test="@Ognl@isNotEmpty(bbsCd)">
+            AND A.BBS_CD = #{bbsCd} 
+        </if>
+        <if test="@Ognl@isNotEmpty(searchVal)">
+            <if test="searchKey == 1000">
+                AND TITLE LIKE '%' || #{searchVal} || '%'
+            </if>
+            <if test="searchKey == 2000">
+                AND CONTENTS LIKE '%' || #{searchVal} || '%'
+            </if>
+        </if>
+        <if test="@Ognl@isNotEmpty(workYn)">
+            <if test="workYn == 'Y'">
+                AND A.START_DD &lt;= TO_CHAR(SYSDATE, 'YYYYMMDD')
+                AND A.END_DD &gt;= TO_CHAR(SYSDATE, 'YYYYMMDD')
+            </if>
+        </if>
+    </sql>
+    
+    <select id="list" resultType="bbsNtcBean" parameterType="map">
+        SELECT Y.* FROM (
+            SELECT ROWNUM NUM, X.* FROM (
+                SELECT /*+ INDEX_DESC(A) */ 
+                       A.BBS_CD      AS bbsCd,
+                       A.NTC_SEQ     AS ntcSeq,
+                       A.TITLE       AS title,
+                       A.READ_CNT    AS readCnt,
+                       FN_FILE_CNT(FILE_SEQ) AS fileCnt,
+                       FN_MGR_NM(A.MGR_ID) AS mgrNm,
+                       (SELECT BBS_NM FROM CO_BBS_CONF WHERE BBS_CD = A.BBS_CD) AS bbsNm,
+                       TO_CHAR(TO_DATE(A.START_DD, 'YYYYMMDD'), 'YYYY-MM-DD') AS startDd,
+                       TO_CHAR(TO_DATE(A.END_DD, 'YYYYMMDD'), 'YYYY-MM-DD') AS endDd,
+                       TO_CHAR(A.REG_DT, 'YYYY-MM-DD') AS regDt
+                  FROM CO_BBS_NTC A
+                 WHERE 1 = 1
+                       <include refid="dynamicWhere"/>
+                ) X
+            WHERE ROWNUM &lt;= #{pagingEndNum}
+         ) Y
+         WHERE NUM &gt;= #{pagingStartNum}              
+    </select>
+
+    <select id="listCount" resultType="int" parameterType="map">
+        SELECT COUNT(A.NTC_SEQ) AS totalCount
+          FROM CO_BBS_NTC A
+         WHERE 1 = 1
+               <include refid="dynamicWhere"/>            
+    </select>
+    
+    <select id="listExcel" resultType="bbsNtcBean" parameterType="map">
+        SELECT /*+ INDEX_DESC(A) */ 
+               A.BBS_CD      AS bbsCd,
+               A.NTC_SEQ     AS ntcSeq,
+               A.TITLE       AS title,
+               A.READ_CNT    AS readCnt,
+               FN_FILE_CNT(FILE_SEQ) AS fileCnt,
+               FN_MGR_NM(A.MGR_ID) AS mgrNm,
+               (SELECT BBS_NM FROM CO_BBS_CONF WHERE BBS_CD = A.BBS_CD) AS bbsNm,
+               TO_CHAR(TO_DATE(A.START_DD, 'YYYYMMDD'), 'YYYY-MM-DD') AS startDd,
+               TO_CHAR(TO_DATE(A.END_DD, 'YYYYMMDD'), 'YYYY-MM-DD') AS endDd,
+               TO_CHAR(A.REG_DT, 'YYYY-MM-DD') AS regDt
+          FROM CO_BBS_NTC A
+         WHERE 1 = 1
+               <include refid="dynamicWhere"/>
+    </select>
+        
+    <select id="view" resultType="bbsNtcBean" parameterType="bbsNtcBean">
+        SELECT A.BBS_CD      AS bbsCd,
+               A.NTC_SEQ     AS ntcSeq,
+               A.TITLE       AS title,
+               A.MGR_ID      AS mgrId,
+               A.CONTENTS    AS contents,
+               A.FILE_SEQ    AS fileSeq,
+               A.READ_CNT    AS readCnt,
+               FN_MGR_NM(A.MGR_ID) AS mgrNm,
+               (SELECT BBS_NM FROM CO_BBS_CONF WHERE BBS_CD = A.BBS_CD) AS bbsNm,
+               TO_CHAR(TO_DATE(A.START_DD, 'YYYYMMDD'), 'YYYY-MM-DD') AS startDd,
+               TO_CHAR(TO_DATE(A.END_DD, 'YYYYMMDD'), 'YYYY-MM-DD') AS endDd,
+               FN_FILE_CNT(FILE_SEQ) AS fileCnt,
+               TO_CHAR(A.REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(A.MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_BBS_NTC A
+         WHERE A.NTC_SEQ = #{ntcSeq}
+         <if test="@Ognl@isNotEmpty(bbsCd)">
+             AND A.BBS_CD = #{bbsCd} 
+         </if>
+    </select>
+
+    <insert id="insert" parameterType="bbsNtcBean">
+        INSERT INTO CO_BBS_NTC (
+            BBS_CD,       NTC_SEQ,      TITLE,        MGR_ID,     
+            CONTENTS,     START_DD,     END_DD,       FILE_SEQ
+        )
+        VALUES (
+            #{bbsCd},     #{ntcSeq},    #{title},     #{mgrId},   
+            #{contents},  #{startDd},   #{endDd},     #{fileSeq}
+        )
+    </insert>
+
+    <update id="update" parameterType="bbsNtcBean">
+        UPDATE CO_BBS_NTC
+           SET BBS_CD   = #{bbsCd},
+               TITLE    = #{title},
+               CONTENTS = #{contents},
+               <if test="@Ognl@isNotEmpty(fileSeq) and fileSeq != -1">
+                   FILE_SEQ = #{fileSeq},
+               </if>
+               START_DD = #{startDd},
+               END_DD   = #{endDd},
+               MODI_DT = SYSDATE
+         WHERE NTC_SEQ = #{ntcSeq}
+    </update>
+    
+    <delete id="delete" parameterType="bbsNtcBean">
+        DELETE 
+          FROM CO_BBS_NTC
+         WHERE 1 = 1
+             <if test="@Ognl@isNotEmpty(ntcSeqs)">
+                 AND NTC_SEQ IN 
+                 <foreach collection="ntcSeqs" index="index" open="(" close=")" separator=", " item="entry">
+                     #{entry}
+                 </foreach>
+             </if>
+    </delete>
+    
+    <select id="listFileSeq" resultType="int" parameterType="bbsNtcBean">
+        SELECT FILE_SEQ
+          FROM CO_BBS_NTC
+         WHERE 1 = 1
+             <if test="@Ognl@isNotEmpty(ntcSeqs)">
+                 AND NTC_SEQ IN 
+                 <foreach collection="ntcSeqs" index="index" open="(" close=")" separator=", " item="entry">
+                     #{entry}
+                 </foreach>
+             </if>
+    </select>
+
+    <update id="updateReadCnt" parameterType="bbsNtcBean">
+        UPDATE CO_BBS_NTC
+           SET READ_CNT = READ_CNT + 1
+         WHERE NTC_SEQ = #{ntcSeq}
+    </update>
+    
+
+    <!-- Using by BBS -->
+    
+    <select id="workList" resultType="bbsNtcBean" parameterType="int">
+        SELECT /*+ INDEX_DESC(A) */ 
+               A.BBS_CD      AS bbsCd,
+               A.NTC_SEQ     AS ntcSeq,
+               A.TITLE       AS title,
+               A.READ_CNT    AS readCnt,
+               FN_MGR_NM(A.MGR_ID) AS mgrNm,
+               FN_FILE_CNT(FILE_SEQ) AS fileCnt,
+               TO_CHAR(A.REG_DT, 'YYYY-MM-DD') AS regDt
+          FROM CO_BBS_NTC A
+         WHERE A.BBS_CD  = #{bbsCd}
+           AND A.START_DD &lt;= TO_CHAR(SYSDATE, 'YYYYMMDD')
+           AND A.END_DD &gt;= TO_CHAR(SYSDATE, 'YYYYMMDD')
+    </select>
+    
+</mapper>

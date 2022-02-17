@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_mgrAbsence">
+    
+    <select id="view" resultType="mgrAbsenceBean" parameterType="string">
+        SELECT MGR_ID               AS mgrId,
+               FN_MGR_NM(MGR_ID)    AS mgrNm,
+               AGENCY_ID            AS agencyId,
+               FN_MGR_NM(AGENCY_ID) AS agencyNm,
+               ABSENCE_CD           AS absenceCd,
+               ABSENCE_REASON       AS absenceReason,
+               FN_PRV_NM(ABSENCE_CD, 'MGR_ABSNS_RSN')     AS absenceNm,
+               TO_CHAR(START_DT, 'YYYYMMDDHH24MISS')      AS startDtPlain,
+               TO_CHAR(END_DT, 'YYYYMMDDHH24MISS')        AS endDtPlain,
+               TO_CHAR(START_DT, 'YYYY-MM-DD HH24:MI:SS') AS startDt,
+               TO_CHAR(END_DT, 'YYYY-MM-DD HH24:MI:SS')   AS endDt,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS')   AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS')  AS modiDt
+          FROM CO_MGR_ABSENCE
+         WHERE MGR_ID = #{mgrId}
+    </select>
+       
+    <insert id="insert" parameterType="mgrAbsenceBean">
+        INSERT INTO CO_MGR_ABSENCE (
+            MGR_ID,      AGENCY_ID,      START_DT,      
+            END_DT,      ABSENCE_CD,     ABSENCE_REASON
+        )
+        VALUES (
+            #{mgrId},       #{agencyId},
+            TO_DATE(#{startDt}, 'YYYYMMDDHH24MISS'),
+            TO_DATE(#{endDt}, 'YYYYMMDDHH24MISS'),
+            #{absenceCd},   #{absenceReason}
+        )
+    </insert>
+    
+    <update id="update" parameterType="mgrAbsenceBean">
+        UPDATE CO_MGR_ABSENCE 
+           SET
+               AGENCY_ID      = #{agencyId},
+               START_DT       = TO_DATE(#{startDt}, 'YYYYMMDDHH24MISS'),
+               END_DT         = TO_DATE(#{endDt}, 'YYYYMMDDHH24MISS'),
+               ABSENCE_CD     = #{absenceCd},
+               ABSENCE_REASON = #{absenceReason},
+               MODI_DT        = SYSDATE
+         WHERE MGR_ID = #{mgrId}
+    </update>
+    
+    <delete id="delete" parameterType="mgrAbsenceBean">
+        DELETE 
+          FROM CO_MGR_ABSENCE
+         WHERE MGR_ID = #{mgrId}
+    </delete>
+    
+    <!-- 
+    <select id="viewAgencyId" resultType="mgrAbsenceBean" parameterType="string">
+        SELECT MGR_ID               AS mgrId,
+               FN_MGR_NM(MGR_ID)    AS mgrNm,
+               AGENCY_ID            AS agencyId,
+               FN_MGR_NM(AGENCY_ID) AS agencyNm,
+               ABSENCE_CD           AS absenceCd,
+               ABSENCE_REASON       AS absenceReason,
+               FN_PRV_NM(ABSENCE_CD, 'MGR_ABSNS_RSN')     AS absenceNm,
+               TO_CHAR(START_DT, 'YYYY-MM-DD HH24:MI:SS') AS startDt,
+               TO_CHAR(END_DT, 'YYYY-MM-DD HH24:MI:SS')   AS endDt,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS')   AS regDt
+          FROM CO_MGR_ABSENCE
+         WHERE AGENCY_ID = #{agencyId}
+    </select> --> 
+    
+    <select id="listMyHandOver" resultType="mgrAbsenceBean" parameterType="string">
+        SELECT MGR_ID               AS mgrId,
+               FN_MGR_NM(MGR_ID)    AS mgrNm,
+               AGENCY_ID            AS agencyId,
+               FN_MGR_NM(AGENCY_ID) AS agencyNm,
+               ABSENCE_CD           AS absenceCd,
+               ABSENCE_REASON       AS absenceReason,
+               FN_PRV_NM(ABSENCE_CD, 'MGR_ABSNS_RSN')     AS absenceNm,
+               TO_CHAR(START_DT, 'YYYY-MM-DD HH24:MI:SS') AS startDt,
+               TO_CHAR(END_DT, 'YYYY-MM-DD HH24:MI:SS')   AS endDt,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS')   AS regDt
+          FROM CO_MGR_ABSENCE
+         WHERE AGENCY_ID    = #{agencyId}
+           AND START_DT &lt;= SYSDATE
+           AND END_DT   &gt;= SYSDATE
+    </select>
+    
+    <!-- 부재중 기간 내 중복 요청 목록 -->
+    <select id="listAgencyOver" resultType="mgrAbsenceBean" parameterType="mgrAbsenceBean">
+        SELECT MGR_ID               AS mgrId,
+               FN_MGR_NM(MGR_ID)    AS mgrNm,
+               AGENCY_ID            AS agencyId,
+               FN_MGR_NM(AGENCY_ID) AS agencyNm,
+               ABSENCE_CD           AS absenceCd,
+               ABSENCE_REASON       AS absenceReason,
+               FN_PRV_NM(ABSENCE_CD, 'MGR_ABSNS_RSN')     AS absenceNm,
+               TO_CHAR(START_DT, 'YYYY-MM-DD HH24:MI:SS') AS startDt,
+               TO_CHAR(END_DT, 'YYYY-MM-DD HH24:MI:SS')   AS endDt,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS')   AS regDt
+          FROM CO_MGR_ABSENCE
+         WHERE AGENCY_ID = #{mgrId}
+           AND NOT (
+                    TO_CHAR(START_DT, 'YYYYMMDDHH24MISS') &gt; #{startDt} AND TO_CHAR(START_DT, 'YYYYMMDDHH24MISS') &gt; #{endDt}
+                    OR
+                    TO_CHAR(END_DT, 'YYYYMMDDHH24MISS') &lt; #{startDt} AND TO_CHAR(END_DT, 'YYYYMMDDHH24MISS') &lt; #{endDt}
+                   )
+    </select>
+    
+    
+    <!-- For MgrAbsenceScheduler -->
+    
+    <delete id="deleteInvalidAbsenceData">
+        DELETE FROM CO_MGR_ABSENCE
+         WHERE MGR_ID IN (           
+            SELECT MGR_ID 
+              FROM CO_MGR_ABSENCE
+             WHERE END_DT &lt; SYSDATE)
+    </delete>
+    
+</mapper>

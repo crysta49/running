@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_mgr">
+    
+    <sql id="dynamicWhere">
+       <if test="@Ognl@isNotEmpty(mgrId)">
+           AND MGR_ID != #{mgrId}
+       </if>
+        <if test="@Ognl@isNotEmpty(deptCd)">
+            AND DEPT_CD = #{deptCd}
+        </if>
+        <if test="@Ognl@isNotEmpty(useYn)">
+            AND USE_YN = #{useYn}
+        </if>
+        <if test="@Ognl@isNotEmpty(authCd)">
+            AND MGR_ID IN (SELECT MGR_ID FROM CO_AUTH_ASSIGN WHERE AUTH_CD = #{authCd})
+        </if>
+        <if test="@Ognl@isNotEmpty(excludeDeptCds)">
+            AND DEPT_CD NOT IN 
+             <foreach collection="excludeDeptCds" index="index" open="(" close=")" separator=", " item="entry">
+                 #{entry}
+             </foreach>
+        </if>
+        <if test="@Ognl@isNotEmpty(searchVal)">
+            <if test="searchKey == 1001">
+                AND MGR_NM LIKE '%' || #{searchVal} || '%'
+            </if>
+        </if>
+    </sql>
+
+    <select id="list" resultType="mgrBean" parameterType="map">
+        SELECT Y.* FROM (
+            SELECT ROWNUM NUM, X.* FROM (
+                SELECT DEPT_CD   AS deptCd,
+                       FN_DEPT_NM(DEPT_CD) AS deptNm,
+                       MGR_ID    AS mgrId,
+                       MGR_NM    AS mgrNm,
+                       USE_YN    AS useYn,
+                       GRADE_NM  AS gradeNm,
+                       ROLE_NM   AS roleNm,
+                       TEL_NUM   AS telNum,
+                       FAX_NUM   AS faxNum,
+                       MOBILE    AS mobile,
+                       EMAIL     AS email,
+                       THEME     AS theme,
+                       LOGIN_CNT AS loginCnt,
+                       TO_CHAR(LOGIN_DT, 'YYYY-MM-DD HH24:MI:SS') AS loginDt,
+                       TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+                       TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+                  FROM CO_MGR
+                 WHERE 1 = 1
+                       <include refid="dynamicWhere" />
+                ) X
+            WHERE ROWNUM &lt;= #{pagingEndNum}
+         ) Y
+         WHERE NUM &gt;= #{pagingStartNum}
+    </select>
+    
+    <select id="listCount" resultType="int" parameterType="map">
+        SELECT COUNT(MGR_ID) AS totalCount
+          FROM CO_MGR
+         WHERE 1 = 1
+               <include refid="dynamicWhere" />
+    </select>
+    
+    <select id="listExcel" resultType="mgrBean" parameterType="map">
+        SELECT DEPT_CD   AS deptCd,
+               FN_DEPT_NM(DEPT_CD) AS deptNm,
+               MGR_ID    AS mgrId,
+               MGR_NM    AS mgrNm,
+               USE_YN    AS useYn,
+               GRADE_NM  AS gradeNm,
+               ROLE_NM   AS roleNm,
+               TEL_NUM   AS telNum,
+               FAX_NUM   AS faxNum,
+               MOBILE    AS mobile,
+               EMAIL     AS email,
+               THEME     AS theme,
+               LOGIN_CNT AS loginCnt,
+               TO_CHAR(LOGIN_DT, 'YYYY-MM-DD HH24:MI:SS') AS loginDt,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_MGR
+         WHERE 1 = 1
+               <include refid="dynamicWhere" />
+    </select>
+    
+    
+    <select id="view" resultType="mgrBean" parameterType="string">
+        SELECT DEPT_CD   AS deptCd,
+               FN_DEPT_NM(DEPT_CD) AS deptNm,
+               MGR_ID    AS mgrId,
+               CONN_ID   AS connId,
+               MGR_NM    AS mgrNm,
+               MGR_ENC_PWD AS mgrEncPwd,
+               USE_YN    AS useYn,
+               GRADE_NM  AS gradeNm,
+               ROLE_NM   AS roleNm,
+               TEL_NUM   AS telNum,
+               FAX_NUM   AS faxNum,
+               MOBILE    AS mobile,
+               EMAIL     AS email,
+               PHOTO     AS photo,
+               ALIM_YN   AS alimYn,
+               EMAIL_YN  AS emailYn,
+               SMS_YN    AS smsYn,
+               THEME     AS theme,
+               LOGIN_CNT AS loginCnt,
+               TO_CHAR(LOGIN_DT, 'YYYY-MM-DD HH24:MI:SS') AS loginDt,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_MGR
+         WHERE MGR_ID = #{mgrId}
+    </select>
+        
+    <insert id="insert" parameterType="mgrBean">
+        INSERT INTO CO_MGR (
+            DEPT_CD,     MGR_ID,      MGR_NM,      MGR_ENC_PWD,      GRADE_NM,
+            ROLE_NM,     TEL_NUM,     FAX_NUM,     MOBILE,           EMAIL,
+            ALIM_YN,     EMAIL_YN,    SMS_YN,      THEME
+        )
+        VALUES (
+            #{deptCd},   #{mgrId},    #{mgrNm},    #{mgrEncPwd},     #{gradeNm},
+            #{roleNm},   #{telNum},   #{faxNum},   #{mobile},        #{email},
+            #{alimYn},   #{emailYn},  #{smsYn},    #{theme}
+        )
+    </insert>
+    
+    <update id="update" parameterType="mgrBean">
+        UPDATE CO_MGR 
+           SET
+               <if test="@Ognl@isNotEmpty(mgrNm)">
+                   MGR_NM = #{mgrNm},
+               </if>
+               <if test="@Ognl@isNotEmpty(deptCd)">
+                   DEPT_CD = #{deptCd},
+               </if>
+               <if test="@Ognl@isNotEmpty(mgrEncPwd)">
+                   MGR_ENC_PWD = #{mgrEncPwd},
+               </if>
+               <if test="@Ognl@isNotEmpty(photo)">
+                   PHOTO = #{photo},
+               </if>
+               <if test="@Ognl@isNotEmpty(useYn)">
+                   USE_YN = #{useYn},
+               </if>
+               GRADE_NM  = #{gradeNm},
+               ROLE_NM   = #{roleNm},
+               TEL_NUM   = #{telNum},
+               FAX_NUM   = #{faxNum},
+               MOBILE    = #{mobile},
+               EMAIL     = #{email},
+               ALIM_YN   = #{alimYn},
+               EMAIL_YN  = #{emailYn},
+               SMS_YN    = #{smsYn},
+               THEME     = #{theme},
+               MODI_DT   = SYSDATE
+         WHERE MGR_ID    = #{mgrId}
+    </update>
+    
+    <delete id="delete" parameterType="mgrBean">
+        DELETE 
+          FROM CO_MGR
+         WHERE MGR_ID = #{mgrId}
+    </delete>
+    
+    
+    <update id="updateLogin" parameterType="mgrBean">
+        UPDATE CO_MGR 
+           SET
+               LOGIN_DT  = SYSDATE,
+               LOGIN_CNT = LOGIN_CNT + 1
+         WHERE MGR_ID    = #{mgrId}
+    </update>
+    
+    <update id="photoDelete" parameterType="mgrBean">
+        UPDATE CO_MGR 
+           SET PHOTO     = ''
+         WHERE MGR_ID    = #{mgrId}
+    </update>
+    
+    <update id="updateTheme" parameterType="mgrBean">
+        UPDATE CO_MGR 
+           SET
+               THEME     = #{theme}
+         WHERE MGR_ID    = #{mgrId}
+    </update>
+
+    <select id="listAll" resultType="mgrBean" parameterType="map">
+        SELECT MGR_ID    AS mgrId,
+               MGR_NM    AS mgrNm
+          FROM CO_MGR
+         WHERE 1 = 1
+               <include refid="dynamicWhere" />
+    </select>
+    
+</mapper>

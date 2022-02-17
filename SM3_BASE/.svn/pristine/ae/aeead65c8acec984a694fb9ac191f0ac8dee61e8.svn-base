@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	
+<project name="salmon 3.0" default="help">
+
+    <target name="init">
+        <property name="src.dir" value="${basedir}/main/src" />
+        <property name="classes.dir" value="${basedir}/webapp/WEB-INF/classes" />
+        <property name="lib.dir" value="${basedir}/webapp/WEB-INF/lib" />
+        <property name="dist.dir" value="${basedir}/dist" />
+
+        <path id="classpath">
+            <fileset dir="${lib.dir}">
+                <include name="**/*.jar"/>
+                <include name="**/*.zip"/>
+            </fileset>
+        </path>
+    </target>
+
+    <target name="prepare" depends="init">
+        <mkdir dir="${src.dir}"/>
+        <mkdir dir="${classes.dir}"/>
+    </target>
+
+    <target name="main" depends="compile, copy-prop"/>
+
+	<target name="compile" depends="prepare">
+        <javac srcdir="${src.dir}"
+               destdir="${classes.dir}"
+               classpathref="classpath"
+               encoding="utf-8"
+               debug="on"
+               optimize="on"
+               deprecation="on">
+            <!-- <compilerarg line="-Xlint:unchecked -Xlint:deprecated"/> -->
+			<include name="com/**/*.java" />
+       </javac>
+    </target>
+    
+    <target name="copy-prop" depends="prepare">
+        <copy todir="${classes.dir}">
+            <fileset dir="${src.dir}">
+                <include name="**/*.*" />
+                <exclude name="**/*_ko.properties" />
+                <exclude name="**/*.java" />
+                <exclude name="**/*.class" />
+            </fileset>
+        </copy>
+    </target>
+    
+	<target name="fm-tag-jar" depends="compile">
+        <delete>
+            <fileset dir="${dist.dir}/jars" includes="fm-taglib-3.0.jar"/>
+        </delete>
+        <jar jarfile="${dist.dir}/jars/fm-taglib-3.0.jar">
+            <fileset dir="${classes.dir}">
+                <include name="com/srpost/cm/bo/fm/tag/**/*.class" />
+            </fileset>
+            <manifest>
+                <attribute name="Built-By" value="flamingo 3.0"/>
+            </manifest>
+            <metainf dir="${basedir}/webapp/WEB-INF/tld">
+                <include name="fm-taglib.tld"/>
+            </metainf>
+        </jar>
+    </target>
+    
+    <target name="jar" depends="compile">
+        <delete>
+            <fileset dir="${dist.dir}/jars" includes="salmon-3.0.jar"/>
+        </delete>
+        <jar jarfile="${dist.dir}/jars/salmon-3.0.jar">
+            <fileset dir="${classes.dir}">
+            	<include name="Ognl.class" />
+                <include name="com/srpost/salmon/**/*.*" />
+            </fileset>
+            <manifest>
+                <attribute name="Built-By" value="salmon 3.0"/>
+            </manifest>
+            <metainf dir="${basedir}/webapp/WEB-INF/tld">
+                <include name="salmon-taglib.tld"/>
+            </metainf>
+        </jar>
+        	
+    	<!--
+        <copy todir="${lib.dir}">
+            <fileset dir="${dist.dir}/jar">
+                <include name="flamingo-taglib-1.0.jar" />
+            </fileset>
+        </copy> -->
+    </target>
+    
+    <target name="help">
+        <echo>-------------------------------------------------------</echo>
+        <echo>main            compile, copy_prop                     </echo>
+        <echo>fm-tag-jar      flamingo tag library jar pakaging      </echo>
+        <echo>jar             salmon lib jar pakaging  (include tag) </echo>
+        <echo>-------------------------------------------------------</echo>
+    </target>
+	
+</project>
