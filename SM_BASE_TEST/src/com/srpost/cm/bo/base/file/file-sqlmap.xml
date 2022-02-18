@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_file">
+    
+    <select id="list" resultType="fileBean" parameterType="int">
+        SELECT FILE_SEQ    AS fileSeq,
+               FILE_ID     AS fileId,
+               ORDER_NO    AS orderNo,   
+               FILE_NM     AS fileNm,    
+               ORG_FILE_NM AS orgFileNm,     
+               FILE_PATH   AS filePath, 
+               FILE_URL    AS fileUrl,
+               FILE_SIZE   AS fileSize, 
+               FILE_TYPE   AS fileType,
+               EXTENSION   AS extension,
+               INPUT_NM    AS inputNm, 
+               DOWN_CNT    AS downCnt
+          FROM CO_FILE
+         WHERE FILE_SEQ = #{fileSeq}
+         ORDER BY ORDER_NO ASC
+    </select>
+        
+    <select id="view" resultType="fileBean" parameterType="string">
+        SELECT FILE_SEQ    AS fileSeq,
+               FILE_ID     AS fileId,
+               ORDER_NO    AS orderNo,   
+               FILE_NM     AS fileNm,    
+               ORG_FILE_NM AS orgFileNm,     
+               FILE_PATH   AS filePath, 
+               FILE_URL    AS fileUrl,
+               FILE_SIZE   AS fileSize, 
+               FILE_TYPE   AS fileType,
+               EXTENSION   AS extension,
+               INPUT_NM    AS inputNm, 
+               DOWN_CNT    AS downCnt
+          FROM CO_FILE
+         WHERE FILE_ID = #{fileId}
+    </select>  
+    
+    <update id="updateDownCnt" parameterType="string">
+        UPDATE CO_FILE
+           SET DOWN_CNT = DOWN_CNT + 1
+         WHERE FILE_ID  = #{fileId}
+    </update>
+        
+    <insert id="insert" parameterType="fileBean">
+        INSERT INTO CO_FILE (
+               FILE_SEQ,      FILE_ID,
+               ORDER_NO,
+               FILE_PATH,     FILE_NM,       ORG_FILE_NM,
+               FILE_SIZE,     FILE_TYPE,     INPUT_NM,
+               FILE_URL,      EXTENSION
+        )
+        VALUES (
+               #{fileSeq},    #{fileId},
+               (SELECT NVL(MAX(ORDER_NO),0)+1 
+                  FROM CO_FILE
+                 WHERE FILE_SEQ = #{fileSeq}),
+               #{filePath},   #{fileNm},     #{orgFileNm},
+               #{fileSize},   #{fileType},   #{inputNm},
+               #{fileUrl},    #{extension}
+        )
+    </insert>
+            
+    <delete id="delete" parameterType="fileBean">
+        DELETE FROM CO_FILE
+         WHERE FILE_SEQ = #{fileSeq}
+           AND FILE_ID  = #{fileId}
+    </delete>
+        
+    <delete id="deleteAll" parameterType="int">
+        DELETE FROM CO_FILE
+         WHERE FILE_SEQ = #{fileSeq}
+    </delete>
+
+
+    <!-- CO_FILE_LOG -->
+    
+    <sql id="dynamicWhere">
+        <if test="@Ognl@isNotEmpty(searchVal)">
+            AND WORKER_NM LIKE '%' || #{searchVal} || '%'
+        </if>
+        <if test="@Ognl@isNotEmpty(sortName)">
+            ORDER BY
+            <if test="sortName == 'regDt'">REG_DT</if>
+            <if test="sortName == 'workerNm'">WORKER_NM</if>
+            <if test="sortName == 'downCnt'">DOWN_CNT</if>
+            ${sortOrder}
+        </if>
+    </sql>
+    
+    <select id="listLog" resultType="fileLogBean" parameterType="map">
+        SELECT Y.* FROM (
+            SELECT ROWNUM NUM, X.* FROM (
+                SELECT WORKER_NM AS workerNm,
+                       DOWN_CNT  AS downCnt,
+                       TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt
+                  FROM CO_FILE_LOG
+                 WHERE FILE_SEQ = #{fileSeq}
+                   AND FILE_ID  = #{fileId}
+                       <include refid="dynamicWhere" />
+                ) X
+            WHERE ROWNUM &lt;= #{pagingEndNum}
+         ) Y
+         WHERE NUM &gt;= #{pagingStartNum}                
+    </select>
+
+    <select id="listLogCount" resultType="int" parameterType="map">
+        SELECT COUNT(WORKER_ID) AS totalCount
+          FROM CO_FILE_LOG
+         WHERE FILE_SEQ = #{fileSeq}
+           AND FILE_ID  = #{fileId}
+               <include refid="dynamicWhere" />
+    </select>
+
+    <select id="viewLog" resultType="string" parameterType="fileLogBean">
+        SELECT FILE_ID
+          FROM CO_FILE_LOG
+         WHERE FILE_SEQ = #{fileSeq}
+           AND FILE_ID  = #{fileId}
+           AND WORKER_ID = #{workerId}
+    </select>
+    
+    <insert id="insertLog" parameterType="fileLogBean">
+        INSERT INTO CO_FILE_LOG (
+            FILE_SEQ,      FILE_ID,
+            ORDER_NO,
+            WORKER_ID,     WORKER_NM    
+        )
+        VALUES (
+            #{fileSeq},    #{fileId},            
+            (SELECT NVL(MAX(ORDER_NO),0)+1 
+               FROM CO_FILE_LOG
+              WHERE FILE_SEQ = #{fileSeq}
+                AND FILE_ID  = #{fileId}),
+            #{workerId},   #{workerNm}
+        )
+    </insert>
+                 
+    <update id="updateLog" parameterType="fileLogBean">
+        UPDATE CO_FILE_LOG
+           SET DOWN_CNT = DOWN_CNT + 1,
+               REG_DT   = SYSDATE
+         WHERE FILE_SEQ = #{fileSeq}
+           AND FILE_ID  = #{fileId}
+           AND WORKER_ID = #{workerId}
+    </update>
+    
+</mapper>

@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="_user">
+    
+    <sql id="dynamicWhere">
+        <if test="@Ognl@isNotEmpty(useYn)">
+            AND USE_YN = #{useYn}
+        </if>
+        <if test="@Ognl@isNotEmpty(typeCd)">
+            AND TYPE_CD = #{typeCd}
+        </if>
+        <if test="@Ognl@isNotEmpty(searchVal)">
+            <if test="searchKey == 1000">
+                AND USER_NM LIKE '%' || #{searchVal} || '%'
+            </if>
+        </if>
+    </sql>
+    
+    <sql id="dynamicSort">
+        <if test="@Ognl@isNotEmpty(sortName)">
+            ORDER BY
+            <if test="sortName == 'userNm'">USER_NM</if>
+            <if test="sortName == 'regDt'">REG_DT</if>
+            ${sortOrder}
+        </if>
+    </sql>
+    
+    <select id="list" resultType="userBean" parameterType="map">
+        SELECT Y.* FROM (
+            SELECT ROWNUM NUM, X.* FROM (
+                SELECT /*+ INDEX (CO_USER IDX_CO_USER_NM) */
+                       USER_KEY     AS userKey,
+                       USER_ID      AS userId,
+                       USER_NM      AS userNm,
+                       TYPE_CD      AS typeCd,
+                       FN_PRV_NM(TYPE_CD, 'USER_TYPE') AS typeNm,
+                       USER_ENC_TEL_NUM AS userEncTelNum,
+                       USER_ENC_MOBILE  AS userEncMobile,
+                       USER_ENC_EMAIL   AS userEncEmail,
+                       POST_CD      AS postCd,
+                       ADDR1        AS addr1,
+                       ADDR2        AS addr2,
+                       USE_YN       AS useYn,
+                       TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+                       TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+                  FROM CO_USER
+                 WHERE 1 = 1
+                       <include refid="dynamicWhere" />
+                       <include refid="dynamicSort" />
+                ) X
+            WHERE ROWNUM &lt;= #{pagingEndNum}
+         ) Y
+         WHERE NUM &gt;= #{pagingStartNum}
+    </select>
+    
+    <select id="listCount" resultType="int" parameterType="map">
+        SELECT COUNT(USER_KEY) AS totalCount
+          FROM CO_USER
+         WHERE 1 = 1
+               <include refid="dynamicWhere" />
+    </select>
+    
+    <select id="listExcel" resultType="userBean" parameterType="map">
+        SELECT /*+ INDEX (CO_USER IDX_CO_USER_NM) */
+               USER_KEY     AS userKey,
+               USER_ID      AS userId,
+               USER_NM      AS userNm,
+               TYPE_CD      AS typeCd,
+               FN_PRV_NM(TYPE_CD, 'USER_TYPE') AS typeNm,
+               USER_ENC_TEL_NUM AS userEncTelNum,
+               USER_ENC_MOBILE  AS userEncMobile,
+               USER_ENC_EMAIL   AS userEncEmail,
+               POST_CD      AS postCd,
+               ADDR1        AS addr1,
+               ADDR2        AS addr2,
+               USE_YN       AS useYn,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_USER
+         WHERE 1 = 1
+               <include refid="dynamicWhere" />
+               <include refid="dynamicSort" />
+    </select>
+    
+    
+    <select id="view" resultType="userBean" parameterType="string">
+        SELECT USER_KEY     AS userKey,
+               USER_ID      AS userId,
+               USER_NM      AS userNm,
+               TYPE_CD      AS typeCd,
+               FN_PRV_NM(TYPE_CD, 'USER_TYPE') AS typeNm,
+               USER_ENC_TEL_NUM AS userEncTelNum,
+               USER_ENC_MOBILE  AS userEncMobile,
+               USER_ENC_EMAIL   AS userEncEmail,
+               USER_ENC_PWD     AS userEncPwd,
+               POST_CD      AS postCd,
+               ADDR1        AS addr1,
+               ADDR2        AS addr2,
+               USE_YN       AS useYn,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt,
+               TO_CHAR(MODI_DT, 'YYYY-MM-DD HH24:MI:SS') AS modiDt
+          FROM CO_USER
+         WHERE USER_KEY = #{userKey}
+    </select>
+        
+    <insert id="insert" parameterType="userBean">
+        INSERT INTO CO_USER (
+            USER_KEY,            USER_ID,             USER_NM,             USER_ENC_PWD,   
+            USER_ENC_TEL_NUM,    USER_ENC_MOBILE,     USER_ENC_EMAIL,      TYPE_CD,
+            POST_CD,             ADDR1,               ADDR2
+        )
+        VALUES (
+            #{userKey},          #{userId},           #{userNm},           #{userEncPwd},  
+            #{userEncTelNum},    #{userEncMobile},    #{userEncEmail},     #{typeCd},
+            #{postCd},           #{addr1},            #{addr2}
+        )
+    </insert>
+
+    <update id="update" parameterType="userBean">
+        UPDATE CO_USER 
+           SET
+               <if test="@Ognl@isNotEmpty(userNm)">
+                   USER_NM = #{userNm},
+               </if>
+               <if test="@Ognl@isNotEmpty(userEncPwd)">
+                   USER_ENC_PWD = #{userEncPwd},
+               </if>
+               <if test="@Ognl@isNotEmpty(postCd)">
+                   POST_CD = #{postCd},
+               </if>
+               <if test="@Ognl@isNotEmpty(addr1)">
+                   ADDR1 = #{addr1},
+               </if>
+               ADDR2 = #{addr2},
+               <if test="@Ognl@isNotEmpty(useYn)">
+                   USE_YN = #{useYn},
+               </if>
+               USER_ENC_TEL_NUM = #{userEncTelNum},
+               USER_ENC_MOBILE  = #{userEncMobile},
+               USER_ENC_EMAIL   = #{userEncEmail},
+               MODI_DT  = SYSDATE
+         WHERE USER_KEY = #{userKey}
+    </update>
+    
+    <delete id="delete" parameterType="userBean">
+        DELETE 
+          FROM CO_USER
+         WHERE USER_KEY = #{userKey}
+    </delete>
+    
+    <select id="userKeyCnt" resultType="int" parameterType="string">
+        SELECT SUM(CNT) AS cnt
+          FROM (
+                SELECT COUNT(USER_KEY) AS cnt
+                  FROM CO_BBS
+                 WHERE USER_KEY = #{userKey}
+               )
+    </select>
+    
+    
+    <!-- CO_USER_LOG -->
+    
+    <insert id="insertLog" parameterType="userLogBean">
+        INSERT INTO CO_USER_LOG (
+            ORDER_NO,     USER_KEY,     MGR_ID,     LOG_CONTENTS
+        )
+        VALUES (
+            (SELECT NVL(MAX(ORDER_NO), 0) + 1
+               FROM CO_USER_LOG
+              WHERE USER_KEY = #{userKey}),
+            #{userKey},   #{mgrId},     #{logContents}
+        )
+    </insert>
+
+    <select id="listLog" resultType="userLogBean" parameterType="string">
+        SELECT FN_MGR_NM(MGR_ID) AS mgrNm,
+               LOG_CONTENTS AS logContents,
+               TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS regDt
+          FROM CO_USER_LOG
+         WHERE USER_KEY = #{userKey}
+         ORDER BY ORDER_NO DESC
+    </select>
+    
+    
+</mapper>
